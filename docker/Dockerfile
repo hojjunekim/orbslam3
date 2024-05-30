@@ -34,13 +34,13 @@ RUN git clone https://github.com/zang09/ORB-SLAM3-STEREO-FIXED.git ORB_SLAM3
 RUN cd ORB_SLAM3 && \
 chmod +x build.sh && \
 ./build.sh
+# Issue: otherwise, you will have Sophus include errors
+RUN cd ORB_SLAM3/Thirdparty/Sophus/build && make install
 
-# build ORB SLAM3 ROS2
+# Clone ROS2 packages
 WORKDIR /home/ros2_ws/src
 RUN git clone https://github.com/jnskkmhr/ORB_SLAM3_ROS2.git orbslam3
 WORKDIR /home/ros2_ws
-RUN rosdep install --from-paths src -yi
-RUN colcon build --symlink-install --packages-select orbslam3
 
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
