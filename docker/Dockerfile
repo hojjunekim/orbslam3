@@ -12,9 +12,9 @@ RUN apt-get update && \
         vim \
         libeigen3-dev \
         python3-colcon-common-extensions \
-        libopencv-dev && \
+        libopencv-dev \
         ros-$ROS_DISTRO-vision-opencv \
-        ros-$ROS_DISTRO-message-filters \
+        ros-$ROS_DISTRO-message-filters && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get clean
 
@@ -31,14 +31,15 @@ RUN git clone https://github.com/stevenlovegrove/Pangolin.git && \
 
 # build ORB SLAM3
 RUN git clone https://github.com/zang09/ORB-SLAM3-STEREO-FIXED.git ORB_SLAM3
-RUN cd ORB_SLAM3 \
-chmod +x build.sh \
+RUN cd ORB_SLAM3 && \
+chmod +x build.sh && \
 ./build.sh
 
 # build ORB SLAM3 ROS2
 WORKDIR /home/ros2_ws/src
-RUN git clone https://github.com/jnskkmhr/ORB_SLAM3_ROS2.git
+RUN git clone https://github.com/jnskkmhr/ORB_SLAM3_ROS2.git orbslam3
 WORKDIR /home/ros2_ws
+RUN rosdep install --from-paths src -yi
 RUN colcon build --symlink-install --packages-select orbslam3
 
 ENTRYPOINT ["/ros_entrypoint.sh"]

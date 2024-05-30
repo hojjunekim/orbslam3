@@ -179,6 +179,7 @@ void StereoInertialNode::SyncWithImu()
             bufMutexRight_.unlock();
 
             vector<ORB_SLAM3::IMU::Point> vImuMeas;
+            Eigen::Vector3f Wbb; // body angular velocity in body frame
             bufMutex_.lock();
             if (!imuBuf_.empty())
             {
@@ -190,6 +191,7 @@ void StereoInertialNode::SyncWithImu()
                     cv::Point3f acc(imuBuf_.front()->linear_acceleration.x, imuBuf_.front()->linear_acceleration.y, imuBuf_.front()->linear_acceleration.z);
                     cv::Point3f gyr(imuBuf_.front()->angular_velocity.x, imuBuf_.front()->angular_velocity.y, imuBuf_.front()->angular_velocity.z);
                     vImuMeas.push_back(ORB_SLAM3::IMU::Point(acc, gyr, t));
+                    Wbb = Eigen::Vector3f(imuBuf_.front()->angular_velocity.x, imuBuf_.front()->angular_velocity.y, imuBuf_.front()->angular_velocity.z);
                     imuBuf_.pop();
                 }
             }
@@ -206,8 +208,8 @@ void StereoInertialNode::SyncWithImu()
                 cv::remap(imLeft, imLeft, M1l_, M2l_, cv::INTER_LINEAR);
                 cv::remap(imRight, imRight, M1r_, M2r_, cv::INTER_LINEAR);
             }
-
-            SLAM_->TrackStereo(imLeft, imRight, tImLeft, vImuMeas);
+            // Transform of camera in  world frame
+            Sophus::SE3f Tcw = SLAM_->TrackStereo(imLeft, imRight, tImLeft, vImuMeas);
 
             std::chrono::milliseconds tSleep(1);
             std::this_thread::sleep_for(tSleep);

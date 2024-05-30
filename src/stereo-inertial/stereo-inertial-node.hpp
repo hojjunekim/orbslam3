@@ -16,6 +16,8 @@
 
 using ImuMsg = sensor_msgs::msg::Imu;
 using ImageMsg = sensor_msgs::msg::Image;
+// using PcdMsg = sensor_msgs::msg::PointCloud2;
+// using PoseMsg = geometry_msgs::msg::PoseStamped;
 
 class StereoInertialNode : public rclcpp::Node
 {
@@ -33,6 +35,10 @@ private:
     rclcpp::Subscription<ImuMsg>::SharedPtr   subImu_;
     rclcpp::Subscription<ImageMsg>::SharedPtr subImgLeft_;
     rclcpp::Subscription<ImageMsg>::SharedPtr subImgRight_;
+
+    // rclcpp::Publisher<PoseMsg>::SharedPtr pubPose_;
+    // rclcpp::Publisher<PoseMsg>::SharedPtr pubOdom_;
+    // rclcpp::Publisher<PcdMsg>::SharedPtr pubPcd_;
 
     ORB_SLAM3::System *SLAM_;
     std::thread *syncThread_;
