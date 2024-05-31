@@ -49,6 +49,7 @@ ament_target_dependencies(rgbd rclcpp sensor_msgs cv_bridge message_filters ORB_
 add_executable(stereo
   src/stereo/stereo.cpp
   src/stereo/stereo-slam-node.cpp
+  src/ros_utils.cpp
 )
 ament_target_dependencies(stereo rclcpp sensor_msgs cv_bridge message_filters
 ORB_SLAM3 Pangolin)
@@ -56,6 +57,7 @@ ORB_SLAM3 Pangolin)
 add_executable(stereo-inertial
   src/stereo-inertial/stereo-inertial.cpp
   src/stereo-inertial/stereo-inertial-node.cpp
+  src/ros_utils.cpp
 )
 ament_target_dependencies(stereo-inertial rclcpp sensor_msgs cv_bridge ORB_SLAM3 Pangolin)
 

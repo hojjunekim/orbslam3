@@ -1,6 +1,7 @@
 #include "stereo-inertial-node.hpp"
 
 #include <opencv2/core/core.hpp>
+#include <ros_utils.cpp>
 
 using std::placeholders::_1;
 
@@ -60,6 +61,13 @@ StereoInertialNode::StereoInertialNode(ORB_SLAM3::System *SLAM, const string &st
     subImu_ = this->create_subscription<ImuMsg>("imu", 1000, std::bind(&StereoInertialNode::GrabImu, this, _1));
     subImgLeft_ = this->create_subscription<ImageMsg>("camera/left", 100, std::bind(&StereoInertialNode::GrabImageLeft, this, _1));
     subImgRight_ = this->create_subscription<ImageMsg>("camera/right", 100, std::bind(&StereoInertialNode::GrabImageRight, this, _1));
+
+    pubPose_ = this->create_publisher<PoseMsg>("camera_pose", 1);
+    pubOdom_ = this->create_publisher<OdomMsg>("body_odometry", 1);
+    pubTrackImage_ = this->create_publisher<ImageMsg>("tracking_image", 1);
+    // pubPcd_ = this->create_publisher<PcdMsg>("point_cloud", 1);
+
+    tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
     syncThread_ = new std::thread(&StereoInertialNode::SyncWithImu, this);
 }
@@ -209,7 +217,13 @@ void StereoInertialNode::SyncWithImu()
                 cv::remap(imRight, imRight, M1r_, M2r_, cv::INTER_LINEAR);
             }
             // Transform of camera in  world frame
-            Sophus::SE3f Tcw = SLAM_->TrackStereo(imLeft, imRight, tImLeft, vImuMeas);
+            SLAM_->TrackStereo(imLeft, imRight, tImLeft, vImuMeas);
+
+            // publish topics
+            Sophus::SE3f Twc = SLAM_->GetCamTwc();
+            publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, "world");
+            publish_tf(tf_broadcaster_, this->get_clock()->now(), Twc, "world", "camera");
+            publish_tracking_img(pubTrackImage_, this->get_clock()->now(), SLAM_->GetCurrentFrame());
 
             std::chrono::milliseconds tSleep(1);
             std::this_thread::sleep_for(tSleep);

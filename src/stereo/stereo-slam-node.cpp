@@ -1,6 +1,7 @@
 #include "stereo-slam-node.hpp"
 
 #include<opencv2/core/core.hpp>
+#include <ros_utils.cpp>
 
 using std::placeholders::_1;
 using std::placeholders::_2;
@@ -51,6 +52,11 @@ StereoSlamNode::StereoSlamNode(ORB_SLAM3::System* pSLAM, const string &strSettin
     left_sub = std::make_shared<message_filters::Subscriber<ImageMsg> >(shared_ptr<rclcpp::Node>(this), "camera/left");
     right_sub = std::make_shared<message_filters::Subscriber<ImageMsg> >(shared_ptr<rclcpp::Node>(this), "camera/right");
 
+    pubPose_ = this->create_publisher<PoseMsg>("camera_pose", 1);
+    pubTrackImage_ = this->create_publisher<ImageMsg>("tracking_image", 1);
+    // pubPcd_ = this->create_publisher<PcdMsg>("point_cloud", 1);
+    tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+
     syncApproximate = std::make_shared<message_filters::Synchronizer<approximate_sync_policy> >(approximate_sync_policy(10), *left_sub, *right_sub);
     syncApproximate->registerCallback(&StereoSlamNode::GrabStereo, this);
 }
@@ -98,4 +104,10 @@ void StereoSlamNode::GrabStereo(const ImageMsg::SharedPtr msgLeft, const ImageMs
     {
         m_SLAM->TrackStereo(cv_ptrLeft->image, cv_ptrRight->image, Utility::StampToSec(msgLeft->header.stamp));
     }
+
+    // publish topics
+    Sophus::SE3f Twc = m_SLAM->GetCamTwc();
+    publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, "world");
+    publish_tf(tf_broadcaster_, this->get_clock()->now(), Twc, "world", "camera");
+    publish_tracking_img(pubTrackImage_, this->get_clock()->now(), m_SLAM_->GetCurrentFrame());
 }
