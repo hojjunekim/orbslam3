@@ -223,7 +223,7 @@ void StereoInertialNode::SyncWithImu()
             // Sophus::SE3f Twc = (SLAM_->mpTracker->mCurrentFrame.GetPose()).inverse();
             publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, "map");
             publish_tf(tf_broadcaster_, this->get_clock()->now(), Twc, "map", "camera_link");
-            // publish_tracking_img(pubTrackImage_, this->get_clock()->now(), SLAM_->GetCurrentFrame());
+            publish_tracking_img(pubTrackImage_, this->get_clock()->now(), SLAM_->GetCurrentFrame());
 
             std::chrono::milliseconds tSleep(1);
             std::this_thread::sleep_for(tSleep);

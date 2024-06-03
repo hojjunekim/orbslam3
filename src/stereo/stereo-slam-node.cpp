@@ -110,5 +110,5 @@ void StereoSlamNode::GrabStereo(const ImageMsg::SharedPtr msgLeft, const ImageMs
     // Sophus::SE3f Twc = (m_SLAM->mpTracker->mCurrentFrame.GetPose()).inverse();
     publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, "map");
     publish_tf(tf_broadcaster_, this->get_clock()->now(), Twc, "map", "camera_link");
-    // publish_tracking_img(pubTrackImage_, this->get_clock()->now(), m_SLAM->GetCurrentFrame());
+    publish_tracking_img(pubTrackImage_, this->get_clock()->now(), m_SLAM->GetCurrentFrame());
 }

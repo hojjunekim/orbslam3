@@ -1,5 +1,5 @@
 FROM osrf/ros:foxy-desktop
-ENV ROS_DISTRO foxy 
+ENV ROS_DISTRO foxy
 
 # install dependencies
 RUN apt-get update && \
@@ -11,6 +11,7 @@ RUN apt-get update && \
         byobu \
         vim \
         libeigen3-dev \
+        libepoxy-dev \
         python3-colcon-common-extensions \
         libopencv-dev \
         ros-$ROS_DISTRO-vision-opencv \
@@ -30,16 +31,19 @@ RUN git clone https://github.com/stevenlovegrove/Pangolin.git && \
     make install
 
 # build ORB SLAM3
-# RUN git clone https://github.com/jnskkmhr/ORB_SLAM3.git
-RUN git clone https://github.com/zang09/ORB-SLAM3-STEREO-FIXED.git ORB_SLAM3
+RUN git clone https://github.com/jnskkmhr/ORB-SLAM3-STEREO-FIXED.git ORB_SLAM3
 RUN cd ORB_SLAM3 && \
 chmod +x build.sh && \
 ./build.sh
 # Issue: otherwise, you will have Sophus include errors
 RUN cd ORB_SLAM3/Thirdparty/Sophus/build && make install
 
-# Install realsense SDK and ROS2 wrapper
-RUN apt-get update && apt-get install -y ros-$ROS_DISTRO-realsense2-*
+# Install librealsense sdk
+RUN mkdir -p /etc/apt/keyrings && curl -sSf https://librealsense.intel.com/Debian/librealsense.pgp | sudo tee /etc/apt/keyrings/librealsense.pgp > /dev/null
+RUN apt-get update && apt-get install apt-transport-https
+RUN echo "deb [signed-by=/etc/apt/keyrings/librealsense.pgp] https://librealsense.intel.com/Debian/apt-repo `lsb_release -cs` main" | tee /etc/apt/sources.list.d/librealsense.list
+RUN apt-get update && apt-get install librealsense2-dkms librealsense2-utils librealsense2-dev librealsense2-dbg
+RUN apt-get install ros-${ROS_DISTRO}-realsense2-*
 
 RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /root/.bashrc
 WORKDIR /home/ros2_ws
