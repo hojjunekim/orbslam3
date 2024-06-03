@@ -11,7 +11,6 @@ RUN apt-get update && \
         byobu \
         vim \
         libeigen3-dev \
-        libepoxy-dev \
         python3-colcon-common-extensions \
         libopencv-dev \
         ros-$ROS_DISTRO-vision-opencv \
@@ -40,10 +39,10 @@ RUN cd ORB_SLAM3/Thirdparty/Sophus/build && make install
 
 # Install librealsense sdk
 RUN mkdir -p /etc/apt/keyrings && curl -sSf https://librealsense.intel.com/Debian/librealsense.pgp | sudo tee /etc/apt/keyrings/librealsense.pgp > /dev/null
-RUN apt-get update && apt-get install apt-transport-https
+RUN apt-get update && apt-get install -y apt-transport-https
 RUN echo "deb [signed-by=/etc/apt/keyrings/librealsense.pgp] https://librealsense.intel.com/Debian/apt-repo `lsb_release -cs` main" | tee /etc/apt/sources.list.d/librealsense.list
-RUN apt-get update && apt-get install librealsense2-dkms librealsense2-utils librealsense2-dev librealsense2-dbg
-RUN apt-get install ros-${ROS_DISTRO}-realsense2-*
+RUN apt-get update && apt-get install -y librealsense2-dkms librealsense2-utils librealsense2-dev librealsense2-dbg
+RUN apt-get install -y ros-${ROS_DISTRO}-realsense2-*
 
 RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /root/.bashrc
 WORKDIR /home/ros2_ws
