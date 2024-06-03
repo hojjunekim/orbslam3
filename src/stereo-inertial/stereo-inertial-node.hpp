@@ -44,7 +44,7 @@ private:
 
     rclcpp::Publisher<PoseMsg>::SharedPtr pubPose_;
     rclcpp::Publisher<OdomMsg>::SharedPtr pubOdom_;
-    // rclcpp::Publisher<PcdMsg>::SharedPtr pubPcd_;
+    rclcpp::Publisher<PcdMsg>::SharedPtr pubPcd_;
     rclcpp::Publisher<ImageMsg>::SharedPtr pubTrackImage_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 

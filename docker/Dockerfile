@@ -30,16 +30,18 @@ RUN git clone https://github.com/stevenlovegrove/Pangolin.git && \
     make install
 
 # build ORB SLAM3
-RUN git clone https://github.com/zang09/ORB-SLAM3-STEREO-FIXED.git ORB_SLAM3
+# RUN git clone https://github.com/jnskkmhr/ORB_SLAM3.git
+RUN git clone https://github.com/zang09/ORB-SLAM3-STEREO-FIXED.git
 RUN cd ORB_SLAM3 && \
 chmod +x build.sh && \
 ./build.sh
 # Issue: otherwise, you will have Sophus include errors
 RUN cd ORB_SLAM3/Thirdparty/Sophus/build && make install
 
-# Clone ROS2 packages
-WORKDIR /home/ros2_ws/src
-RUN git clone https://github.com/jnskkmhr/ORB_SLAM3_ROS2.git orbslam3
+# Install realsense SDK and ROS2 wrapper
+RUN apt-get update && apt-get install -y ros-$ROS_DISTRO-realsense2-*
+
+RUN echo "source /opt/ros/$ROS_DISTRO/setup.bash" >> /root/.bashrc
 WORKDIR /home/ros2_ws
 
 ENTRYPOINT ["/ros_entrypoint.sh"]

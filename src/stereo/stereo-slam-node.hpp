@@ -50,7 +50,7 @@ private:
     std::shared_ptr<message_filters::Subscriber<ImageMsg> > right_sub;
 
     rclcpp::Publisher<PoseMsg>::SharedPtr pubPose_;
-    // rclcpp::Publisher<PcdMsg>::SharedPtr pubPcd_;
+    rclcpp::Publisher<PcdMsg>::SharedPtr pubPcd_;
     rclcpp::Publisher<ImageMsg>::SharedPtr pubTrackImage_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 

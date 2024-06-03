@@ -1,29 +1,9 @@
-#include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/header.hpp>
-#include <sensor_msgs/msg/image.hpp>
-#include <sensor_msgs/msg/point_cloud2.hpp>
-#include <geometry_msgs/msg/pose_stamped.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-#include "tf2/LinearMath/Quaternion.h"
-#include "tf2_ros/transform_broadcaster.h"
-
-#include <Eigen/Core>
-#include <Eigen/Geometry>
-
-#include "sophus/se3.hpp"
-#include "cv_bridge/cv_bridge.h"
+#include <ros_utils.hpp>
 
 using ImageMsg = sensor_msgs::msg::Image;
 using PcdMsg = sensor_msgs::msg::PointCloud2;
 using PoseMsg = geometry_msgs::msg::PoseStamped;
 using OdomMsg = nav_msgs::msg::Odometry;
-
-// WIP: report all the pose/odom in FLU coordinate (currently all OpenCV)
-// Notation:
-// Tcw: Rigidbody Transform from camera coordinate to world coordinate
-// Tbw: Rigidbody Transform from body coordinate to world coordinate
-// Vwb: Linear velocity of body in world coordinate
-// Wwb: Angular velocity of body in world coordinate
 
 void publish_camera_pose(
   const rclcpp::Publisher<PoseMsg>::SharedPtr& publisher, 
@@ -94,11 +74,11 @@ void publish_tracking_img(
 
   sensor_msgs::msg::Image::SharedPtr image_msg = cv_bridge::CvImage(header, "bgr8", image).toImageMsg();
 
-  publisher->publish(image_msg);
+  publisher->publish(*image_msg.get());
 }
 
 void publish_tf(
-  const std::shared_ptr<tf2_ros::TransformBroadcaster>& tf_broadcaster,
+  const std::unique_ptr<tf2_ros::TransformBroadcaster>& tf_broadcaster,
   const rclcpp::Time& stamp,
   Sophus::SE3f T,
   std::string parent_frame_id,
