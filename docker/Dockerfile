@@ -31,7 +31,7 @@ RUN git clone https://github.com/stevenlovegrove/Pangolin.git && \
 
 # build ORB SLAM3
 # RUN git clone https://github.com/jnskkmhr/ORB_SLAM3.git
-RUN git clone https://github.com/zang09/ORB-SLAM3-STEREO-FIXED.git
+RUN git clone https://github.com/zang09/ORB-SLAM3-STEREO-FIXED.git ORB_SLAM3
 RUN cd ORB_SLAM3 && \
 chmod +x build.sh && \
 ./build.sh
