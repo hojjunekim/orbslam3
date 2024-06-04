@@ -1,0 +1,6 @@
+orbslam3:
+  ros__parameters:
+    world_frame: "map"
+    odom_frame: "odom"
+    camera_frame: "camera_link"
+    body_frame: "imu_link"

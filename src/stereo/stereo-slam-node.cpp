@@ -59,6 +59,11 @@ StereoSlamNode::StereoSlamNode(ORB_SLAM3::System* pSLAM, const string &strSettin
 
     syncApproximate = std::make_shared<message_filters::Synchronizer<approximate_sync_policy> >(approximate_sync_policy(10), *left_sub, *right_sub);
     syncApproximate->registerCallback(&StereoSlamNode::GrabStereo, this);
+
+    // declare rosparameters
+    this->declare_parameter("world_frame", "map");
+    this->declare_parameter("odom_frame", "odom");
+    this->declare_parameter("camera_frame", "camera_link");
 }
 
 StereoSlamNode::~StereoSlamNode()
@@ -94,21 +99,23 @@ void StereoSlamNode::GrabStereo(const ImageMsg::SharedPtr msgLeft, const ImageMs
         return;
     }
 
-    Sophus::SE3f Twc;
+    Sophus::SE3f Tcw;
     if (doRectify){
         cv::Mat imLeft, imRight;
         cv::remap(cv_ptrLeft->image,imLeft,M1l,M2l,cv::INTER_LINEAR);
         cv::remap(cv_ptrRight->image,imRight,M1r,M2r,cv::INTER_LINEAR);
-        Twc = m_SLAM->TrackStereo(imLeft, imRight, Utility::StampToSec(msgLeft->header.stamp));
+        Tcw = m_SLAM->TrackStereo(imLeft, imRight, Utility::StampToSec(msgLeft->header.stamp));
     }
     else
     {
-        Twc = m_SLAM->TrackStereo(cv_ptrLeft->image, cv_ptrRight->image, Utility::StampToSec(msgLeft->header.stamp));
+        Tcw = m_SLAM->TrackStereo(cv_ptrLeft->image, cv_ptrRight->image, Utility::StampToSec(msgLeft->header.stamp));
     }
 
     // publish topics
-    // Sophus::SE3f Twc = (m_SLAM->mpTracker->mCurrentFrame.GetPose()).inverse();
-    publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, "map");
-    publish_tf(tf_broadcaster_, this->get_clock()->now(), Twc, "map", "camera_link");
-    publish_tracking_img(pubTrackImage_, this->get_clock()->now(), m_SLAM->GetCurrentFrame());
+    std::string world_frame = this->get_parameter("world_frame").as_string();
+    std::string camera_frame = this->get_parameter("camera_frame").as_string();
+    Sophus::SE3f Twc = Tcw.inverse();
+    publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, world_frame);
+    publish_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, camera_frame);
+    publish_tracking_img(pubTrackImage_, this->get_clock()->now(), m_SLAM->GetCurrentFrame(), camera_frame);
 }

@@ -8,21 +8,21 @@ using OdomMsg = nav_msgs::msg::Odometry;
 void publish_camera_pose(
   const rclcpp::Publisher<PoseMsg>::SharedPtr& publisher, 
   const rclcpp::Time& stamp,
-  Sophus::SE3f& Tcw,  
+  Sophus::SE3f& Twc,  
   std::string world_frame_id)
 {
   geometry_msgs::msg::PoseStamped pose_msg;
   pose_msg.header.frame_id = world_frame_id;
   pose_msg.header.stamp = stamp;
 
-  pose_msg.pose.position.x = Tcw.translation().x();
-  pose_msg.pose.position.y = Tcw.translation().y();
-  pose_msg.pose.position.z = Tcw.translation().z();
+  pose_msg.pose.position.x = Twc.translation().x();
+  pose_msg.pose.position.y = Twc.translation().y();
+  pose_msg.pose.position.z = Twc.translation().z();
 
-  pose_msg.pose.orientation.w = Tcw.unit_quaternion().coeffs().w();
-  pose_msg.pose.orientation.x = Tcw.unit_quaternion().coeffs().x();
-  pose_msg.pose.orientation.y = Tcw.unit_quaternion().coeffs().y();
-  pose_msg.pose.orientation.z = Tcw.unit_quaternion().coeffs().z();
+  pose_msg.pose.orientation.w = Twc.unit_quaternion().coeffs().w();
+  pose_msg.pose.orientation.x = Twc.unit_quaternion().coeffs().x();
+  pose_msg.pose.orientation.y = Twc.unit_quaternion().coeffs().y();
+  pose_msg.pose.orientation.z = Twc.unit_quaternion().coeffs().z();
 
   publisher->publish(pose_msg);
 }

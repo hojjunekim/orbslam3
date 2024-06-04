@@ -77,8 +77,22 @@ target_include_directories(
 install(TARGETS mono rgbd stereo stereo-inertial
   DESTINATION lib/${PROJECT_NAME})
 
+# Install config files
+install(DIRECTORY
+  config
+  DESTINATION share/${PROJECT_NAME}/
+)
+
+# Install vocab files
+install(DIRECTORY
+  vocabulary
+  DESTINATION share/${PROJECT_NAME}/
+)
+
 # Install launch files.
-#install(DIRECTORY launch config vocabulary
-#  DESTINATION share/${PROJECT_NAME}/)
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}/
+)
 
 ament_package()

@@ -70,6 +70,12 @@ StereoInertialNode::StereoInertialNode(ORB_SLAM3::System *SLAM, const string &st
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
     syncThread_ = new std::thread(&StereoInertialNode::SyncWithImu, this);
+
+    // declare rosparameters
+    this->declare_parameter("world_frame", "map");
+    this->declare_parameter("odom_frame", "odom");
+    this->declare_parameter("camera_frame", "camera_link");
+    this->declare_parameter("body_frame", "imu_link");
 }
 
 StereoInertialNode::~StereoInertialNode()
@@ -217,13 +223,15 @@ void StereoInertialNode::SyncWithImu()
                 cv::remap(imRight, imRight, M1r_, M2r_, cv::INTER_LINEAR);
             }
             // Transform of camera in  world frame
-            Sophus::SE3f Twc = SLAM_->TrackStereo(imLeft, imRight, tImLeft, vImuMeas);
+            Sophus::SE3f Tcw = SLAM_->TrackStereo(imLeft, imRight, tImLeft, vImuMeas);
 
             // publish topics
-            // Sophus::SE3f Twc = (SLAM_->mpTracker->mCurrentFrame.GetPose()).inverse();
-            publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, "map");
-            publish_tf(tf_broadcaster_, this->get_clock()->now(), Twc, "map", "camera_link");
-            publish_tracking_img(pubTrackImage_, this->get_clock()->now(), SLAM_->GetCurrentFrame());
+            std::string world_frame = this->get_parameter("world_frame").as_string();
+            std::string camera_frame = this->get_parameter("camera_frame").as_string();
+            Sophus::SE3f Twc = Tcw.inverse();
+            publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, world_frame);
+            publish_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, camera_frame);
+            publish_tracking_img(pubTrackImage_, this->get_clock()->now(), SLAM_->GetCurrentFrame(), camera_frame);
 
             std::chrono::milliseconds tSleep(1);
             std::this_thread::sleep_for(tSleep);
