@@ -4,18 +4,12 @@ This repository is ROS2 wrapping to use ORB_SLAM3
 ---
 
 ## Prerequisites
-- I have tested on below version.
+Current repository supports:
   - Ubuntu 20.04
   - ROS2 foxy
   - OpenCV 4.2.0
 
-- Build ORB_SLAM3
-  - Go to this [repo](https://github.com/zang09/ORB-SLAM3-STEREO-FIXED) and follow build instruction.
-
-- Install related ROS2 package
-```
-$ sudo apt install ros-$ROS_DISTRO-vision-opencv && sudo apt install ros-$ROS_DISTRO-message-filters
-```
+In the future, I will also test with Ubuntu22.04 (OpenCV 4.5.4).
 
 ## How to build
 We use docker for the simplicity. \

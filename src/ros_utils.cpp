@@ -11,6 +11,7 @@ void publish_camera_pose(
   Sophus::SE3f& Twc,  
   std::string world_frame_id)
 {
+  // Twc: pose matrix from world coordinate to camera coordinate
   geometry_msgs::msg::PoseStamped pose_msg;
   pose_msg.header.frame_id = world_frame_id;
   pose_msg.header.stamp = stamp;
@@ -30,25 +31,28 @@ void publish_camera_pose(
 void publish_body_odometry(
   const rclcpp::Publisher<OdomMsg>::SharedPtr& publisher,
   const rclcpp::Time& stamp, 
-  Sophus::SE3f Tbw, 
+  Sophus::SE3f Twb, 
   Eigen::Vector3f Vwb, 
   Eigen::Vector3f Wwb,
   std::string world_frame_id,
   std::string odom_frame_id)
 {
+  // Twb: pose matrix from world coordinate to body coordinate
+  // Vwb: body velocity in world coordinate
+  // Wwb: body angular velocity in world coordinate
   nav_msgs::msg::Odometry odom_msg;
   odom_msg.header.frame_id = world_frame_id;
   odom_msg.child_frame_id = odom_frame_id;
   odom_msg.header.stamp = stamp;
 
-  odom_msg.pose.pose.position.x = Tbw.translation().x();
-  odom_msg.pose.pose.position.y = Tbw.translation().y();
-  odom_msg.pose.pose.position.z = Tbw.translation().z();
+  odom_msg.pose.pose.position.x = Twb.translation().x();
+  odom_msg.pose.pose.position.y = Twb.translation().y();
+  odom_msg.pose.pose.position.z = Twb.translation().z();
 
-  odom_msg.pose.pose.orientation.w = Tbw.unit_quaternion().coeffs().w();
-  odom_msg.pose.pose.orientation.x = Tbw.unit_quaternion().coeffs().x();
-  odom_msg.pose.pose.orientation.y = Tbw.unit_quaternion().coeffs().y();
-  odom_msg.pose.pose.orientation.z = Tbw.unit_quaternion().coeffs().z();
+  odom_msg.pose.pose.orientation.w = Twb.unit_quaternion().coeffs().w();
+  odom_msg.pose.pose.orientation.x = Twb.unit_quaternion().coeffs().x();
+  odom_msg.pose.pose.orientation.y = Twb.unit_quaternion().coeffs().y();
+  odom_msg.pose.pose.orientation.z = Twb.unit_quaternion().coeffs().z();
 
   odom_msg.twist.twist.linear.x = Vwb.x();
   odom_msg.twist.twist.linear.y = Vwb.y();
@@ -84,6 +88,7 @@ void publish_tf(
   std::string parent_frame_id,
   std::string child_frame_id)
 {
+  // T: pose matrix from parent frame to child frame
   geometry_msgs::msg::TransformStamped t;
 
   t.header.stamp = stamp;

@@ -4,9 +4,8 @@ project(orbslam3)
 # You should set the PYTHONPATH to your own python site-packages path
 set(ENV{PYTHONPATH} "/opt/ros/foxy/lib/python3.8/site-packages/")
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} 
-${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules
-"/home/thirdparty/ORB_SLAM3/modules")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
+# set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules "/home/thirdparty/ORB_SLAM3/modules")
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)

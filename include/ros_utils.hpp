@@ -22,13 +22,13 @@ using OdomMsg = nav_msgs::msg::Odometry;
 void publish_camera_pose(
   const rclcpp::Publisher<PoseMsg>::SharedPtr& publisher, 
   const rclcpp::Time& stamp,
-  Sophus::SE3f& Tcw,  
+  Sophus::SE3f& Twc,  
   std::string world_frame_id);
 
 void publish_body_odometry(
   const rclcpp::Publisher<OdomMsg>::SharedPtr& publisher,
   const rclcpp::Time& stamp, 
-  Sophus::SE3f Tbw, 
+  Sophus::SE3f Twb, 
   Eigen::Vector3f Vwb, 
   Eigen::Vector3f Wwb,
   std::string world_frame_id,
