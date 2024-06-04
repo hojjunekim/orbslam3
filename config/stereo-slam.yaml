@@ -2,4 +2,4 @@ orbslam3:
   ros__parameters:
     world_frame: "map"
     odom_frame: "odom"
-    camera_frame: "camera_link"
+    camera_frame: "d435i_infra1_frame"
