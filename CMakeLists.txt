@@ -4,7 +4,9 @@ project(orbslam3)
 # You should set the PYTHONPATH to your own python site-packages path
 set(ENV{PYTHONPATH} "/opt/ros/foxy/lib/python3.8/site-packages/")
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} 
+${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules
+"/home/thirdparty/ORB_SLAM3/modules")
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -26,6 +28,8 @@ find_package(cv_bridge REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(Sophus REQUIRED)
 find_package(Pangolin REQUIRED)
+find_package(epoxy REQUIRED)
+find_package(OpenGL REQUIRED COMPONENTS OpenGL EGL)
 find_package(ORB_SLAM3 REQUIRED)
 
 add_executable(mono
