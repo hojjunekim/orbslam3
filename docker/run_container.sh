@@ -1,6 +1,6 @@
 #!/bin/bash
 xhost +
-IMAGE="kmhr20001218/orbslam3-ros2:latest"
+IMAGE="orbslam3-ros2:latest"
 NAME="orbslam3-ros2-container"
 docker run --name $NAME -it --rm \
 -e "ACCEPT_EULA=Y" --privileged --network=host \
