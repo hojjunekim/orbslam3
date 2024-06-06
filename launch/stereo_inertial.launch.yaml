@@ -30,5 +30,5 @@ launch:
           from: "/camera/right"
           to: "/$(var camera_name)/camera/infra2/image_rect_raw"
       -
-          from: "imu"
+          from: "/imu"
           to: "/$(var camera_name)/camera/imu"

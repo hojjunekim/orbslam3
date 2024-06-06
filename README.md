@@ -15,10 +15,7 @@ In the future, I will also test with Ubuntu22.04 (OpenCV 4.5.4).
 We use docker for the simplicity. \
 You can build docker image via
 ```bash
-# option1
 ./docker/build_image.sh
-# option2
-docker pull kmhr201218/orbslam3-ros2:latest
 ```
 
 Then, run container
@@ -40,6 +37,10 @@ $ source /home/ros2_ws/install/setup.bash
 2. Run orbslam mode, which you want.  
 For now, we only care about stereo and stereo-inertial.
 
+First, start realsense node. 
+```bash
+ros2 launch realsense2_camera rs_launch.py enable_infra1:=true enable_infra2:=true enable_accel:=true enable_gyro:=true unite_imu_method:=2 infra_width:=640 infra_height:=480 align_depth:=true pointcloud.enable:=true
+```
 
 Stereo
 ```bash

@@ -58,9 +58,9 @@ StereoInertialNode::StereoInertialNode(ORB_SLAM3::System *SLAM, const string &st
         cv::initUndistortRectifyMap(K_r, D_r, R_r, P_r.rowRange(0, 3).colRange(0, 3), cv::Size(cols_r, rows_r), CV_32F, M1r_, M2r_);
     }
 
-    subImu_ = this->create_subscription<ImuMsg>("imu", 1000, std::bind(&StereoInertialNode::GrabImu, this, _1));
-    subImgLeft_ = this->create_subscription<ImageMsg>("camera/left", 100, std::bind(&StereoInertialNode::GrabImageLeft, this, _1));
-    subImgRight_ = this->create_subscription<ImageMsg>("camera/right", 100, std::bind(&StereoInertialNode::GrabImageRight, this, _1));
+    subImu_ = this->create_subscription<ImuMsg>("imu", 10, std::bind(&StereoInertialNode::GrabImu, this, std::placeholders::_1));
+    subImgLeft_ = this->create_subscription<ImageMsg>("camera/left", 10, std::bind(&StereoInertialNode::GrabImageLeft, this, std::placeholders::_1));
+    subImgRight_ = this->create_subscription<ImageMsg>("camera/right", 10, std::bind(&StereoInertialNode::GrabImageRight, this, std::placeholders::_1));
 
     pubPose_ = this->create_publisher<PoseMsg>("camera_pose", 1);
     pubOdom_ = this->create_publisher<OdomMsg>("body_odometry", 1);
@@ -69,13 +69,13 @@ StereoInertialNode::StereoInertialNode(ORB_SLAM3::System *SLAM, const string &st
 
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
-    syncThread_ = new std::thread(&StereoInertialNode::SyncWithImu, this);
-
     // declare rosparameters
     this->declare_parameter("world_frame", "map");
     this->declare_parameter("odom_frame", "odom");
     this->declare_parameter("camera_frame", "camera_link");
     this->declare_parameter("body_frame", "imu_link");
+
+    syncThread_ = new std::thread(&StereoInertialNode::SyncWithImu, this);
 }
 
 StereoInertialNode::~StereoInertialNode()
@@ -151,10 +151,12 @@ void StereoInertialNode::SyncWithImu()
 
     while (1)
     {
+        RCLCPP_INFO_ONCE(this->get_logger(), "SLAM running...");
         cv::Mat imLeft, imRight;
         double tImLeft = 0, tImRight = 0;
         if (!imgLeftBuf_.empty() && !imgRightBuf_.empty() && !imuBuf_.empty())
         {
+            RCLCPP_INFO_ONCE(this->get_logger(), "Grab Image");
             tImLeft = Utility::StampToSec(imgLeftBuf_.front()->header.stamp);
             tImRight = Utility::StampToSec(imgRightBuf_.front()->header.stamp);
 
@@ -176,7 +178,7 @@ void StereoInertialNode::SyncWithImu()
 
             if ((tImLeft - tImRight) > maxTimeDiff || (tImRight - tImLeft) > maxTimeDiff)
             {
-                std::cout << "big time difference" << std::endl;
+                RCLCPP_INFO_ONCE(this->get_logger(), "big time difference");
                 continue;
             }
             if (tImLeft > Utility::StampToSec(imuBuf_.back()->header.stamp))
@@ -197,6 +199,7 @@ void StereoInertialNode::SyncWithImu()
             bufMutex_.lock();
             if (!imuBuf_.empty())
             {
+                RCLCPP_INFO_ONCE(this->get_logger(), "Grab Imu");
                 // Load imu measurements from buffer
                 vImuMeas.clear();
                 while (!imuBuf_.empty() && Utility::StampToSec(imuBuf_.front()->header.stamp) <= tImLeft)
@@ -222,6 +225,7 @@ void StereoInertialNode::SyncWithImu()
                 cv::remap(imLeft, imLeft, M1l_, M2l_, cv::INTER_LINEAR);
                 cv::remap(imRight, imRight, M1r_, M2r_, cv::INTER_LINEAR);
             }
+            
             // Transform of camera in  world frame
             Sophus::SE3f Tcw = SLAM_->TrackStereo(imLeft, imRight, tImLeft, vImuMeas);
 
