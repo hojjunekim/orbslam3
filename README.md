@@ -39,15 +39,15 @@ For now, we only care about stereo and stereo-inertial.
 
 First, start realsense node. 
 ```bash
-ros2 launch realsense2_camera rs_launch.py enable_infra1:=true enable_infra2:=true enable_accel:=true enable_gyro:=true unite_imu_method:=2 infra_width:=640 infra_height:=480 align_depth:=true pointcloud.enable:=true
+ros2 launch realsense2_camera rs_launch.py enable_infra1:=true enable_infra2:=true enable_accel:=true enable_gyro:=true unite_imu_method:=2 infra_width:=640 infra_height:=480 camera_name:=d455 camera_namespace:=d455
 ```
 
 Stereo
 ```bash
-ros2 launch orbslam3 stereo.launch.yaml
+ros2 launch orbslam3 stereo_d455.launch.yaml
 ```
 
 Stereo-Inertial
 ```bash
-ros2 launch orbslam3 stereo_inertial.launch.yaml
+ros2 launch orbslam3 stereo_inertial_d455.launch.yaml
 ```

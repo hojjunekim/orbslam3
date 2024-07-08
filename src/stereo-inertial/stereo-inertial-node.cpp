@@ -243,15 +243,15 @@ void StereoInertialNode::SyncWithImu()
             std::string camera_optical_frame = this->get_parameter("camera_optical_frame").as_string();
 
             Sophus::SE3f Twc = Tcw.inverse(); // Twc is gravity aligned???
-            // Coordinate Transform: OpenCV coordinate to ROS FLU coordinate
-            Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
-            Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
-            cv_to_ros_rot << 0, 0, 1,
-                            -1, 0, 0,
-                            0, -1, 0;
-            cv_to_ros_trans << 0, 0, 0;
-            Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
-            Twc = cv_to_ros * Twc; // from opencv to ROS coordiante
+            // // Coordinate Transform: OpenCV coordinate to ROS FLU coordinate
+            // Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
+            // Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
+            // cv_to_ros_rot << 0, 0, 1,
+            //                 -1, 0, 0,
+            //                 0, -1, 0;
+            // cv_to_ros_trans << 0, 0, 0;
+            // Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
+            // Twc = cv_to_ros * Twc; // from opencv to ROS coordiante
 
             publish_camera_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, body_optical_frame);
             publish_optical_to_frame_tf(tf_static_broadcaster_, this->get_clock()->now(), body_optical_frame, body_frame);
