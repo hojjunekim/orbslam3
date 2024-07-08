@@ -56,6 +56,7 @@ StereoSlamNode::StereoSlamNode(ORB_SLAM3::System* pSLAM, const string &strSettin
     pubTrackImage_ = this->create_publisher<ImageMsg>("tracking_image", 1);
     pubPcd_ = this->create_publisher<PcdMsg>("point_cloud", 1);
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+    tf_static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);
 
     syncApproximate = std::make_shared<message_filters::Synchronizer<approximate_sync_policy> >(approximate_sync_policy(10), *left_sub, *right_sub);
     syncApproximate->registerCallback(&StereoSlamNode::GrabStereo, this);
@@ -64,6 +65,7 @@ StereoSlamNode::StereoSlamNode(ORB_SLAM3::System* pSLAM, const string &strSettin
     this->declare_parameter("world_frame", "map");
     this->declare_parameter("odom_frame", "odom");
     this->declare_parameter("camera_frame", "camera_link");
+    this->declare_parameter("camera_optical_frame", "camera_optical_link");
 }
 
 StereoSlamNode::~StereoSlamNode()
@@ -114,8 +116,21 @@ void StereoSlamNode::GrabStereo(const ImageMsg::SharedPtr msgLeft, const ImageMs
     // publish topics
     std::string world_frame = this->get_parameter("world_frame").as_string();
     std::string camera_frame = this->get_parameter("camera_frame").as_string();
+    std::string camera_optical_frame = this->get_parameter("camera_optical_frame").as_string();
     Sophus::SE3f Twc = Tcw.inverse();
-    publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, world_frame);
-    publish_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, camera_frame);
-    publish_tracking_img(pubTrackImage_, this->get_clock()->now(), m_SLAM->GetCurrentFrame(), camera_frame);
+
+    // Coordinate Transform: OpenCV coordinate to ROS FLU coordinate
+    Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
+    Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
+    cv_to_ros_rot << 0, 0, 1,
+                    -1, 0, 0,
+                    0, -1, 0;
+    cv_to_ros_trans << 0, 0, 0;
+    Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
+    Twc = cv_to_ros * Twc; // camera optical frame pose in ROS FLU map coorinate
+
+    publish_camera_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, camera_optical_frame);
+    publish_optical_to_frame_tf(tf_static_broadcaster_, this->get_clock()->now(), camera_optical_frame, camera_frame);
+    publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, camera_optical_frame);
+    publish_tracking_img(pubTrackImage_, this->get_clock()->now(), m_SLAM->GetCurrentFrame(), world_frame);
 }

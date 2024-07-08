@@ -3,15 +3,40 @@
 #--------------------------------------------------------------------------------------------
 # Camera Parameters. Adjust them!
 #--------------------------------------------------------------------------------------------
-Camera.type: "Rectified"
+Camera.type: "PinHole"
 
 # Left Camera calibration and distortion parameters (OpenCV)
-Camera.fx: 382.613
-Camera.fy: 382.613
-Camera.cx: 320.183
-Camera.cy: 236.455
+Camera.fx: 384.108
+Camera.fy: 384.108
+Camera.cx: 316.020
+Camera.cy: 239.754
 
-Stereo.b: 0.09481
+# distortion parameters
+Camera.k1: 0.0
+Camera.k2: 0.0
+Camera.p1: 0.0
+Camera.p2: 0.0
+
+# Right Camera calibration and distortion parameters (OpenCV)
+Camera2.fx: 384.108
+Camera2.fy: 384.108
+Camera2.cx: 316.020
+Camera2.cy: 239.754
+
+# distortion parameters
+Camera2.k1: 0.0
+Camera2.k2: 0.0
+Camera2.p1: 0.0
+Camera2.p2: 0.0
+
+Tlr: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: f
+  data: [1.0, 0.0, 0.0, 0.09481,
+         0.0, 1.0, 0.0, 0.0,
+         0.0, 0.0, 1.0, 0.0,
+         0.0, 0.0, 0.0, 1.0]
 
 # Camera resolution
 Camera.width: 640
@@ -26,15 +51,18 @@ Camera.RGB: 1
 # Close/Far threshold. Baseline times.
 ThDepth: 40.0
 
+# stereo baseline times fx
+Camera.bf: 36.4172
+
 # Transformation from body-frame (imu) to left camera
-IMU.T_b_c1: !!opencv-matrix
+Tbc: !!opencv-matrix
    rows: 4
    cols: 4
    dt: f
-   data: [1.0, 0.0, 0.0, -0.005,
-          0.0, 1.0, 0.0, -0.005,
-          0.0, 0.0, 1.0, 0.0117,
-          0.0, 0.0, 0.0, 1.0]
+   data: [1.00, 0.00,  0.00, -0.02647408,
+          0.00,  1.00, 0.00,  0.00914898,
+          0.00,  0.00, 1.00,  0.02575617,
+          0.00,  0.00,  0.00,  1.000]
 
 # Do not insert KFs when recently lost
 InsertKFsWhenLost: 0

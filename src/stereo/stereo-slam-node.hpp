@@ -7,6 +7,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_ros/transform_broadcaster.h"
+#include "tf2_ros/static_transform_broadcaster.h"
 
 #include "message_filters/subscriber.h"
 #include "message_filters/synchronizer.h"
@@ -53,6 +54,7 @@ private:
     rclcpp::Publisher<PcdMsg>::SharedPtr pubPcd_;
     rclcpp::Publisher<ImageMsg>::SharedPtr pubTrackImage_;
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
 
     std::shared_ptr<message_filters::Synchronizer<approximate_sync_policy> > syncApproximate;
 };

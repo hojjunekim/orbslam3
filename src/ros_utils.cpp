@@ -45,6 +45,16 @@ void publish_body_odometry(
   odom_msg.child_frame_id = odom_frame_id;
   odom_msg.header.stamp = stamp;
 
+  // Coordinate Transform: OpenCV coordinate to ROS FLU coordinate
+  Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
+  Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
+  cv_to_ros_rot << 0, -1, 0,
+                  0, 0, -1,
+                  1, 0, 0;
+  cv_to_ros_trans << 0, 0, 0;
+  Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
+
+  Twb = cv_to_ros * Twb; 
   odom_msg.pose.pose.position.x = Twb.translation().x();
   odom_msg.pose.pose.position.y = Twb.translation().y();
   odom_msg.pose.pose.position.z = Twb.translation().z();
@@ -53,6 +63,9 @@ void publish_body_odometry(
   odom_msg.pose.pose.orientation.x = Twb.unit_quaternion().coeffs().x();
   odom_msg.pose.pose.orientation.y = Twb.unit_quaternion().coeffs().y();
   odom_msg.pose.pose.orientation.z = Twb.unit_quaternion().coeffs().z();
+
+  Vwb = cv_to_ros_rot * Vwb; 
+  Wwb = cv_to_ros_rot * Wwb; 
 
   odom_msg.twist.twist.linear.x = Vwb.x();
   odom_msg.twist.twist.linear.y = Vwb.y();
@@ -81,10 +94,10 @@ void publish_tracking_img(
   publisher->publish(*image_msg.get());
 }
 
-void publish_tf(
+void publish_camera_tf(
   const std::unique_ptr<tf2_ros::TransformBroadcaster>& tf_broadcaster,
   const rclcpp::Time& stamp,
-  Sophus::SE3f T,
+  Sophus::SE3f& Twc,
   std::string parent_frame_id,
   std::string child_frame_id)
 {
@@ -95,14 +108,49 @@ void publish_tf(
   t.header.frame_id = parent_frame_id;
   t.child_frame_id = child_frame_id;
 
-  t.transform.translation.x = T.translation().x();
-  t.transform.translation.y = T.translation().y();
-  t.transform.translation.z = T.translation().z();
+  t.transform.translation.x = Twc.translation().x();
+  t.transform.translation.y = Twc.translation().y();
+  t.transform.translation.z = Twc.translation().z();
 
-  t.transform.rotation.w = T.unit_quaternion().coeffs().w();
-  t.transform.rotation.x = T.unit_quaternion().coeffs().x();
-  t.transform.rotation.y = T.unit_quaternion().coeffs().y();
-  t.transform.rotation.z = T.unit_quaternion().coeffs().z();
+  t.transform.rotation.w = Twc.unit_quaternion().coeffs().w();
+  t.transform.rotation.x = Twc.unit_quaternion().coeffs().x();
+  t.transform.rotation.y = Twc.unit_quaternion().coeffs().y();
+  t.transform.rotation.z = Twc.unit_quaternion().coeffs().z();
 
   tf_broadcaster->sendTransform(t);
+}
+
+
+void publish_optical_to_frame_tf(
+  const std::shared_ptr<tf2_ros::StaticTransformBroadcaster>& tf_static_broadcaster,
+  const rclcpp::Time& stamp,
+  std::string parent_frame_id,
+  std::string child_frame_id)
+{
+  // T: pose matrix from parent frame to child frame
+  geometry_msgs::msg::TransformStamped t;
+
+  t.header.stamp = stamp;
+  t.header.frame_id = parent_frame_id;
+  t.child_frame_id = child_frame_id;
+
+  // Coordinate Transform: OpenCV coordinate to ROS FLU coordinate
+  Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
+  Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
+  cv_to_ros_rot << 0, -1, 0,
+                  0, 0, -1,
+                  1, 0, 0;
+  cv_to_ros_trans << 0, 0, 0;
+  Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
+
+  t.transform.translation.x = cv_to_ros.translation().x();
+  t.transform.translation.y = cv_to_ros.translation().y();
+  t.transform.translation.z = cv_to_ros.translation().z();
+
+  t.transform.rotation.w = cv_to_ros.unit_quaternion().coeffs().w();
+  t.transform.rotation.x = cv_to_ros.unit_quaternion().coeffs().x();
+  t.transform.rotation.y = cv_to_ros.unit_quaternion().coeffs().y();
+  t.transform.rotation.z = cv_to_ros.unit_quaternion().coeffs().z();
+
+  tf_static_broadcaster->sendTransform(t);
 }

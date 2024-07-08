@@ -7,6 +7,7 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_ros/transform_broadcaster.h"
+#include "tf2_ros/static_transform_broadcaster.h"
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -40,9 +41,15 @@ void publish_tracking_img(
   cv::Mat image, 
   std::string frame_id); 
 
-void publish_tf(
+void publish_camera_tf(
   const std::unique_ptr<tf2_ros::TransformBroadcaster>& tf_broadcaster,
   const rclcpp::Time& stamp,
-  Sophus::SE3f T,
+  Sophus::SE3f& Twc,
+  std::string parent_frame_id,
+  std::string child_frame_id);
+
+void publish_optical_to_frame_tf(
+  const std::shared_ptr<tf2_ros::StaticTransformBroadcaster>& tf_static_broadcaster,
+  const rclcpp::Time& stamp,
   std::string parent_frame_id,
   std::string child_frame_id);

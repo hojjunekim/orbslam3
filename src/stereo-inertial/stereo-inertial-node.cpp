@@ -58,22 +58,29 @@ StereoInertialNode::StereoInertialNode(ORB_SLAM3::System *SLAM, const string &st
         cv::initUndistortRectifyMap(K_r, D_r, R_r, P_r.rowRange(0, 3).colRange(0, 3), cv::Size(cols_r, rows_r), CV_32F, M1r_, M2r_);
     }
 
-    subImu_ = this->create_subscription<ImuMsg>("imu", 10, std::bind(&StereoInertialNode::GrabImu, this, std::placeholders::_1));
+    /// without qos setting, imu is not subscribed by StereoInertialNode
+    rclcpp::QoS imu_qos(10);
+    imu_qos.best_effort();
+    imu_qos.durability_volatile();
+    ////////////////////////////////////////
+    subImu_ = this->create_subscription<ImuMsg>("imu", imu_qos, std::bind(&StereoInertialNode::GrabImu, this, std::placeholders::_1));
     subImgLeft_ = this->create_subscription<ImageMsg>("camera/left", 10, std::bind(&StereoInertialNode::GrabImageLeft, this, std::placeholders::_1));
     subImgRight_ = this->create_subscription<ImageMsg>("camera/right", 10, std::bind(&StereoInertialNode::GrabImageRight, this, std::placeholders::_1));
 
-    pubPose_ = this->create_publisher<PoseMsg>("camera_pose", 1);
-    pubOdom_ = this->create_publisher<OdomMsg>("body_odometry", 1);
+    pubPose_ = this->create_publisher<PoseMsg>("body_pose", 1);
+    pubOdom_ = this->create_publisher<OdomMsg>("imu_odometry", 1);
     pubTrackImage_ = this->create_publisher<ImageMsg>("tracking_image", 1);
     pubPcd_ = this->create_publisher<PcdMsg>("point_cloud", 1);
 
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+    tf_static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);
 
     // declare rosparameters
     this->declare_parameter("world_frame", "map");
     this->declare_parameter("odom_frame", "odom");
-    this->declare_parameter("camera_frame", "camera_link");
-    this->declare_parameter("body_frame", "imu_link");
+    this->declare_parameter("body_frame", "body_link");
+    this->declare_parameter("body_optical_frame", "body_optical_link");
+    this->declare_parameter("camera_optical_frame", "camera_optical_link");
 
     syncThread_ = new std::thread(&StereoInertialNode::SyncWithImu, this);
 }
@@ -231,11 +238,25 @@ void StereoInertialNode::SyncWithImu()
 
             // publish topics
             std::string world_frame = this->get_parameter("world_frame").as_string();
-            std::string camera_frame = this->get_parameter("camera_frame").as_string();
-            Sophus::SE3f Twc = Tcw.inverse();
+            std::string body_frame = this->get_parameter("body_frame").as_string();
+            std::string body_optical_frame = this->get_parameter("body_optical_frame").as_string();
+            std::string camera_optical_frame = this->get_parameter("camera_optical_frame").as_string();
+
+            Sophus::SE3f Twc = Tcw.inverse(); // Twc is gravity aligned???
+            // Coordinate Transform: OpenCV coordinate to ROS FLU coordinate
+            Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
+            Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
+            cv_to_ros_rot << 0, 0, 1,
+                            -1, 0, 0,
+                            0, -1, 0;
+            cv_to_ros_trans << 0, 0, 0;
+            Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
+            Twc = cv_to_ros * Twc; // from opencv to ROS coordiante
+
+            publish_camera_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, body_optical_frame);
+            publish_optical_to_frame_tf(tf_static_broadcaster_, this->get_clock()->now(), body_optical_frame, body_frame);
             publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, world_frame);
-            publish_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, camera_frame);
-            publish_tracking_img(pubTrackImage_, this->get_clock()->now(), SLAM_->GetCurrentFrame(), camera_frame);
+            publish_tracking_img(pubTrackImage_, this->get_clock()->now(), SLAM_->GetCurrentFrame(), camera_optical_frame);
 
             std::chrono::milliseconds tSleep(1);
             std::this_thread::sleep_for(tSleep);
