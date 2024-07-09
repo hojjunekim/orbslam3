@@ -95,7 +95,7 @@ void publish_tracking_img(
 }
 
 void publish_camera_tf(
-  const std::unique_ptr<tf2_ros::TransformBroadcaster>& tf_broadcaster,
+  const std::shared_ptr<tf2_ros::TransformBroadcaster>& tf_broadcaster,
   const rclcpp::Time& stamp,
   Sophus::SE3f& Twc,
   std::string parent_frame_id,
@@ -121,9 +121,10 @@ void publish_camera_tf(
 }
 
 
-void publish_optical_to_frame_tf(
-  const std::shared_ptr<tf2_ros::StaticTransformBroadcaster>& tf_static_broadcaster,
+void publish_world_to_odom_tf(
+  const std::shared_ptr<tf2_ros::TransformBroadcaster>& tf_broadcaster,
   const rclcpp::Time& stamp,
+  Sophus::SE3f& Two, 
   std::string parent_frame_id,
   std::string child_frame_id)
 {
@@ -134,23 +135,61 @@ void publish_optical_to_frame_tf(
   t.header.frame_id = parent_frame_id;
   t.child_frame_id = child_frame_id;
 
-  // Coordinate Transform: OpenCV coordinate to ROS FLU coordinate
-  Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
-  Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
-  cv_to_ros_rot << 0, -1, 0,
-                  0, 0, -1,
-                  1, 0, 0;
-  cv_to_ros_trans << 0, 0, 0;
-  Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
+  t.transform.translation.x = Two.translation().x();
+  t.transform.translation.y = Two.translation().y();
+  t.transform.translation.z = Two.translation().z();
 
-  t.transform.translation.x = cv_to_ros.translation().x();
-  t.transform.translation.y = cv_to_ros.translation().y();
-  t.transform.translation.z = cv_to_ros.translation().z();
+  t.transform.rotation.w = Two.unit_quaternion().coeffs().w();
+  t.transform.rotation.x = Two.unit_quaternion().coeffs().x();
+  t.transform.rotation.y = Two.unit_quaternion().coeffs().y();
+  t.transform.rotation.z = Two.unit_quaternion().coeffs().z();
 
-  t.transform.rotation.w = cv_to_ros.unit_quaternion().coeffs().w();
-  t.transform.rotation.x = cv_to_ros.unit_quaternion().coeffs().x();
-  t.transform.rotation.y = cv_to_ros.unit_quaternion().coeffs().y();
-  t.transform.rotation.z = cv_to_ros.unit_quaternion().coeffs().z();
-
-  tf_static_broadcaster->sendTransform(t);
+  tf_broadcaster->sendTransform(t);
 }
+
+
+Eigen::Affine3f transform_to_eigen(
+  const geometry_msgs::msg::TransformStamped& transform_stamped){
+    Eigen::Vector3f translation(
+      transform_stamped.transform.translation.x, 
+      transform_stamped.transform.translation.y, 
+      transform_stamped.transform.translation.z
+    ); 
+
+    Eigen::Quaternionf quat(
+      transform_stamped.transform.rotation.w, 
+      transform_stamped.transform.rotation.x, 
+      transform_stamped.transform.rotation.y, 
+      transform_stamped.transform.rotation.z
+    ); 
+    
+    Eigen::Translation<float, 3> trans(translation); 
+    Eigen::Matrix3f rot = quat.toRotationMatrix(); 
+    Eigen::Affine3f affine = trans * rot; 
+
+    return affine; 
+  }
+
+
+Sophus::SE3f transform_to_SE3(
+  const geometry_msgs::msg::TransformStamped& transform_stamped){
+
+    Eigen::Vector3f translation(
+      transform_stamped.transform.translation.x, 
+      transform_stamped.transform.translation.y, 
+      transform_stamped.transform.translation.z
+    ); 
+
+    Eigen::Quaternionf quat(
+      transform_stamped.transform.rotation.w, 
+      transform_stamped.transform.rotation.x, 
+      transform_stamped.transform.rotation.y, 
+      transform_stamped.transform.rotation.z
+    ); 
+
+    Eigen::Matrix3f rotation = quat.toRotationMatrix(); 
+    
+    Sophus::SE3f se3(rotation, translation);
+
+    return se3;
+  }

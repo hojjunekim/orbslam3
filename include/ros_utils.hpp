@@ -42,14 +42,32 @@ void publish_tracking_img(
   std::string frame_id); 
 
 void publish_camera_tf(
-  const std::unique_ptr<tf2_ros::TransformBroadcaster>& tf_broadcaster,
+  const std::shared_ptr<tf2_ros::TransformBroadcaster>& tf_broadcaster,
   const rclcpp::Time& stamp,
   Sophus::SE3f& Twc,
   std::string parent_frame_id,
   std::string child_frame_id);
 
+void publish_world_to_odom_tf(
+  const std::shared_ptr<tf2_ros::TransformBroadcaster>& tf_broadcaster,
+  const rclcpp::Time& stamp,
+  Sophus::SE3f& Two,
+  std::string parent_frame_id,
+  std::string child_frame_id
+); 
+
 void publish_optical_to_frame_tf(
   const std::shared_ptr<tf2_ros::StaticTransformBroadcaster>& tf_static_broadcaster,
   const rclcpp::Time& stamp,
   std::string parent_frame_id,
-  std::string child_frame_id);
+  std::string child_frame_id
+);
+
+
+Eigen::Affine3f transform_to_eigen(
+  const geometry_msgs::msg::TransformStamped& transform_stamped
+);
+
+Sophus::SE3f transform_to_SE3(
+  const geometry_msgs::msg::TransformStamped& transform_stamped
+);

@@ -72,8 +72,18 @@ StereoInertialNode::StereoInertialNode(ORB_SLAM3::System *SLAM, const string &st
     pubTrackImage_ = this->create_publisher<ImageMsg>("tracking_image", 1);
     pubPcd_ = this->create_publisher<PcdMsg>("point_cloud", 1);
 
-    tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+    tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
     tf_static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);
+    tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+
+    // define coordinate transforms ///
+    // OpenCV to ROS FLU coordinate transforms
+    cv_to_ros_rot << 0, 0, 1,
+                    -1, 0, 0,
+                    0, -1, 0;
+    cv_to_ros_trans << 0, 0, 0;
+    Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
 
     // declare rosparameters
     this->declare_parameter("world_frame", "map");
@@ -238,23 +248,23 @@ void StereoInertialNode::SyncWithImu()
 
             // publish topics
             std::string world_frame = this->get_parameter("world_frame").as_string();
+            std::string odom_frame = this->get_parameter("odom_frame").as_string();
             std::string body_frame = this->get_parameter("body_frame").as_string();
             std::string body_optical_frame = this->get_parameter("body_optical_frame").as_string();
             std::string camera_optical_frame = this->get_parameter("camera_optical_frame").as_string();
 
-            Sophus::SE3f Twc = Tcw.inverse(); // Twc is gravity aligned???
-            // // Coordinate Transform: OpenCV coordinate to ROS FLU coordinate
-            // Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
-            // Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
-            // cv_to_ros_rot << 0, 0, 1,
-            //                 -1, 0, 0,
-            //                 0, -1, 0;
-            // cv_to_ros_trans << 0, 0, 0;
-            // Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
-            // Twc = cv_to_ros * Twc; // from opencv to ROS coordiante
+            Sophus::SE3f Twc = Tcw.inverse(); // Twc is imu optical frame pose in ROS FLU map coordinate
+            // Twc = Twc * cv_to_ros.inverse(); // imu frame pose in ROS FLU map coorinate
 
-            publish_camera_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, body_optical_frame);
-            publish_optical_to_frame_tf(tf_static_broadcaster_, this->get_clock()->now(), body_optical_frame, body_frame);
+            //// TF processing ////
+            geometry_msgs::msg::TransformStamped camera_to_odom = tf_buffer_->lookupTransform(body_frame, odom_frame, tf2::TimePointZero);
+            Sophus::SE3f Tco= transform_to_SE3(camera_to_odom);
+            Sophus::SE3f Two = Twc * Tco.inverse();
+
+            // Option1: publish map to odom tf from SLAM and odom to camera form VIO 
+            publish_world_to_odom_tf(tf_broadcaster_, this->get_clock()->now(), Two, world_frame, odom_frame);
+            // Option2: publish map to camera tf from SLAM
+            // publish_camera_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, body_frame);
             publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, world_frame);
             publish_tracking_img(pubTrackImage_, this->get_clock()->now(), SLAM_->GetCurrentFrame(), camera_optical_frame);
 
