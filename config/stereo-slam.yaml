@@ -4,3 +4,5 @@ orbslam3:
     odom_frame: "odom_frame"
     camera_frame: "d455_link"
     camera_optical_frame: "d455_infra1_optical_frame"
+    # camera_frame: "d435i_link"
+    # camera_optical_frame: "d435i_infra1_optical_frame"

@@ -77,14 +77,6 @@ StereoInertialNode::StereoInertialNode(ORB_SLAM3::System *SLAM, const string &st
     tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
     tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
-    // define coordinate transforms ///
-    // OpenCV to ROS FLU coordinate transforms
-    cv_to_ros_rot << 0, 0, 1,
-                    -1, 0, 0,
-                    0, -1, 0;
-    cv_to_ros_trans << 0, 0, 0;
-    Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
-
     // declare rosparameters
     this->declare_parameter("world_frame", "map");
     this->declare_parameter("odom_frame", "odom");
@@ -245,6 +237,7 @@ void StereoInertialNode::SyncWithImu()
             
             // Transform of camera in  world frame
             Sophus::SE3f Tcw = SLAM_->TrackStereo(imLeft, imRight, tImLeft, vImuMeas);
+            Sophus::SE3f Twc = Tcw.inverse(); // Twc is imu optical frame pose in ROS FLU map coordinate
 
             // publish topics
             std::string world_frame = this->get_parameter("world_frame").as_string();
@@ -253,23 +246,41 @@ void StereoInertialNode::SyncWithImu()
             std::string body_optical_frame = this->get_parameter("body_optical_frame").as_string();
             std::string camera_optical_frame = this->get_parameter("camera_optical_frame").as_string();
 
-            Sophus::SE3f Twc = Tcw.inverse(); // Twc is imu optical frame pose in ROS FLU map coordinate
-            // Twc = Twc * cv_to_ros.inverse(); // imu frame pose in ROS FLU map coorinate
+            // define coordinate transforms ///
+            // OpenCV to ROS FLU coordinate transforms
+            Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
+            Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
+            cv_to_ros_rot << 0, 0, 1,
+                            -1, 0, 0,
+                            0, -1, 0;
+            cv_to_ros_trans << 0, 0, 0;
+            Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
+            std::cout << cv_to_ros.matrix() << std::endl; 
 
+            // coordiante transform
+            Twc = Twc * cv_to_ros.inverse(); // imu frame pose in ROS FLU map coorinate
+
+            // Option1: publish map to odom tf from SLAM and odom to camera from VIO 
             //// TF processing ////
-            geometry_msgs::msg::TransformStamped camera_to_odom = tf_buffer_->lookupTransform(body_frame, odom_frame, tf2::TimePointZero);
-            Sophus::SE3f Tco= transform_to_SE3(camera_to_odom);
-            Sophus::SE3f Two = Twc * Tco.inverse();
+            try {
+                geometry_msgs::msg::TransformStamped camera_to_odom = tf_buffer_->lookupTransform(body_frame, odom_frame, tf2::TimePointZero);
+                Sophus::SE3f Tco= transform_to_SE3(camera_to_odom);
+                Sophus::SE3f Two = Twc * Tco.inverse();
+                publish_world_to_odom_tf(tf_broadcaster_, this->get_clock()->now(), Two, world_frame, odom_frame);
+            } catch (const tf2::TransformException & ex) {
+                RCLCPP_INFO(
+                this->get_logger(), "Could not get transform %s to %s: %s",
+                body_frame.c_str(), odom_frame.c_str(), ex.what());
+                return;
+            }
 
-            // Option1: publish map to odom tf from SLAM and odom to camera form VIO 
-            publish_world_to_odom_tf(tf_broadcaster_, this->get_clock()->now(), Two, world_frame, odom_frame);
             // Option2: publish map to camera tf from SLAM
             // publish_camera_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, body_frame);
             publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, world_frame);
-            publish_tracking_img(pubTrackImage_, this->get_clock()->now(), SLAM_->GetCurrentFrame(), camera_optical_frame);
+            publish_tracking_img(pubTrackImage_, this->get_clock()->now(), SLAM_->GetCurrentFrame(), world_frame);
 
-            std::chrono::milliseconds tSleep(1);
-            std::this_thread::sleep_for(tSleep);
+            // std::chrono::milliseconds tSleep(1);
+            // std::this_thread::sleep_for(tSleep);
         }
     }
 }

@@ -69,14 +69,6 @@ StereoSlamNode::StereoSlamNode(ORB_SLAM3::System* pSLAM, const string &strSettin
     this->declare_parameter("odom_frame", "odom");
     this->declare_parameter("camera_frame", "camera_link");
     this->declare_parameter("camera_optical_frame", "camera_optical_link");
-
-    // define coordinate transforms ///
-    // OpenCV to ROS FLU coordinate transforms
-    cv_to_ros_rot << 0, 0, 1,
-                    -1, 0, 0,
-                    0, -1, 0;
-    cv_to_ros_trans << 0, 0, 0;
-    Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
 }
 
 StereoSlamNode::~StereoSlamNode()
@@ -132,17 +124,37 @@ void StereoSlamNode::GrabStereo(const ImageMsg::SharedPtr msgLeft, const ImageMs
     std::string camera_frame = this->get_parameter("camera_frame").as_string();
     std::string camera_optical_frame = this->get_parameter("camera_optical_frame").as_string();
 
+    // define coordinate transforms ///
+    // OpenCV to ROS FLU coordinate transforms
+    Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
+    Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
+    cv_to_ros_rot << 0, 0, 1,
+                    -1, 0, 0,
+                    0, -1, 0;
+    cv_to_ros_trans << 0, 0, 0;
+    Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
+    std::cout << cv_to_ros.matrix() << std::endl; 
+
     // Coordinate Transform: OpenCV coordinate to ROS FLU coordinate
     Twc = cv_to_ros * Twc; // camera optical frame pose in ROS FLU map coorinate
     Twc = Twc * cv_to_ros.inverse(); // camera frame pose in ROS FLU map coorinate
 
-    //// TF processing ////
-    geometry_msgs::msg::TransformStamped camera_to_odom = tf_buffer_->lookupTransform(camera_frame, odom_frame, tf2::TimePointZero);
-    Sophus::SE3f Tco= transform_to_SE3(camera_to_odom);
-    Sophus::SE3f Two = Twc * Tco.inverse();
+    // Option1: publish map to odom tf from SLAM and odom to camera from VIO 
+    // TF processing ////
+    try {
+        geometry_msgs::msg::TransformStamped camera_to_odom = tf_buffer_->lookupTransform(camera_frame, odom_frame, tf2::TimePointZero);
+        Sophus::SE3f Tco= transform_to_SE3(camera_to_odom);
+        Sophus::SE3f Two = Twc * Tco.inverse();
+        publish_world_to_odom_tf(tf_broadcaster_, this->get_clock()->now(), Two, world_frame, odom_frame);
+    } catch (const tf2::TransformException & ex) {
+        RCLCPP_INFO(
+        this->get_logger(), "Could not get transform %s to %s: %s",
+        camera_frame.c_str(), odom_frame.c_str(), ex.what());
+        return;
+    }
 
-    publish_world_to_odom_tf(tf_broadcaster_, this->get_clock()->now(), Two, world_frame, odom_frame);
+    // Option2: publish map to camera tf from SLAM
     // publish_camera_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, camera_frame);
-    publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, camera_optical_frame);
+    publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, world_frame);
     publish_tracking_img(pubTrackImage_, this->get_clock()->now(), m_SLAM->GetCurrentFrame(), world_frame);
 }

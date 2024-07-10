@@ -61,10 +61,6 @@ private:
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_; 
 
     std::shared_ptr<message_filters::Synchronizer<approximate_sync_policy> > syncApproximate;
-
-    Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
-    Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
-    Sophus::SE3f cv_to_ros;
 };
 
 #endif

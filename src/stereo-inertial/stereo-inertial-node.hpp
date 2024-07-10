@@ -54,10 +54,6 @@ private:
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_; 
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_; 
 
-    Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
-    Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
-    Sophus::SE3f cv_to_ros;
-
     ORB_SLAM3::System *SLAM_;
     std::thread *syncThread_;
 
