@@ -56,6 +56,34 @@ Stereo-Inertial node:
 ros2 launch orbslam3 stereo_inertial_d455.launch.yaml
 ```
 
+## Topics
+
+### Stereo
+Subscriber:
+* `/camera/left`: left image topic
+* `/camera/right`: right image topic
+
+Publisher:
+* `/camera_pose`: left camera frame pose in ROS FLU map (first camera frame) coordinate 
+* `/tracking_image`: tracked left image. 
+* `/tf`: `map` to `odom_frame` transform (need external odometry source)
+
+### Stereo-inertial
+Subscriber:
+* `/camera/left`: left image topic
+* `/camera/right`: right image topic
+* `/imu`: imu topic
+
+Publisher:
+* `/camera_pose`: left camera frame pose in ROS FLU map (first camera frame) coordinate 
+* `/tracking_image`: tracked left image. 
+* `/tf`: `map` to `odom_frame` transform (need external odometry source)
+
+Note that the orbslam3 node publishes map to odom tf2. \
+But, you can also publish map to camera instead by commenting out the [following](https://github.com/jnskkmhr/orbslam3/blob/28a55556bb3be2e3065b1bb4eedf9f99227c5c51/src/stereo/stereo-slam-node.cpp#L142-L154) and turning on the [following](https://github.com/jnskkmhr/orbslam3/blob/28a55556bb3be2e3065b1bb4eedf9f99227c5c51/src/stereo/stereo-slam-node.cpp#L157). 
+The same goes to stereo-inertial node. 
+
+
 ### WIP
 Currently, stereo-inertial node does not work properly. \
 I see IMU initialization takes a lot of time, and the pose sometimes jumps. \
