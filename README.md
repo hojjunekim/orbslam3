@@ -14,34 +14,42 @@ Current repository supports:
 
 In the future, I will also test with Ubuntu22.04 (OpenCV 4.5.4).
 
-## How to build
+## Installation
+
+### Build docker image
 We use docker for the simplicity. \
 You can build docker image via
 ```bash
 ./docker/build_image.sh
 ```
 
-Then, run container
-```bash
-./docker/run_container.sh
-```
+### Build ros2 package
 
-To build orbslam3 ros2, 
+To build orb-slam3 ros2 package, you need to start container and build the package inside the container. \
+To do so, you first run the following command and run colcon build inside docker shell.
 ```bash
+# the following shell command let you enter docker container and cd to /home/ros2_ws
+./docker/run_container.sh
+
+# inside docker container, build orbslam3 ros2 package
 colcon build --cmake-args -DCMAKE_CXX_FLAGS="-w" --symlink-install --packages-select orbslam3
 ```
 
 ## How to use
-1. Source the workspace  
-```
-$ source /home/ros2_ws/install/setup.bash
+1. Start container and source the workspace.
+
+```bash
+# the following shell command let you enter docker container and cd to /home/ros2_ws
+./docker/run_container.sh
+# then inside the container, source ros2 workspace
+source install/setup.bash
 ```
 
 2. Run orbslam mode, which you want.  
 
 Currently, I modified stereo and stereo-inertial node. \
 First, start realsense node. \
-For example, to run stereo/stereo-inertial, 
+For example, to run realsense camera with stereo and imu streams, 
 ```bash
 ros2 launch realsense2_camera rs_launch.py enable_infra1:=true enable_infra2:=true enable_accel:=true enable_gyro:=true unite_imu_method:=2 infra_width:=640 infra_height:=480 camera_name:=d455 camera_namespace:=d455
 ```

@@ -1,5 +1,5 @@
 #!/bin/bash
-#xhost +
+xhost +local:root # enable GUI use
 IMAGE="orbslam3-ros2:latest"
 NAME="orbslam3-ros2-container"
 docker run --name $NAME -it --rm \
