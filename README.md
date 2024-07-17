@@ -15,11 +15,17 @@ Current repository supports:
 In the future, I will also test with Ubuntu22.04 (OpenCV 4.5.4).
 
 ## Installation
+First, clone the repository. 
+```bash
+mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
+git clone git@github.com:jnskkmhr/orbslam3.git
+```
 
 ### Build docker image
 We use docker for the simplicity. \
 You can build docker image via
 ```bash
+cd orbslam3
 ./docker/build_image.sh
 ```
 
@@ -34,6 +40,7 @@ To do so, you first run the following command and run colcon build inside docker
 # inside docker container, build orbslam3 ros2 package
 colcon build --cmake-args -DCMAKE_CXX_FLAGS="-w" --symlink-install --packages-select orbslam3
 ```
+Be aware that you only need to build package once since the entire ros2_ws directory is mounted to docker container.
 
 ## How to use
 1. Start container and source the workspace.
