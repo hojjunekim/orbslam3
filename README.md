@@ -3,7 +3,11 @@ This repository is the modified package of the [original repository](https://git
 The issue I had is 
 * rclcpp node does not provide anything (tf2, tracked image, pose topics etc)
 * stereo-inertial node did not work because of QOS setting in IMU subscriber.
-* SLAM pose was optical frame pose expressed in OpenCV frame, but I needed camera frame pose in ROS FLU coordinate. 
+* SLAM pose was optical frame pose expressed in OpenCV frame, but I needed camera frame pose in ROS FLU coordinate.
+
+Standalone C++ ORB-SLAM3 repository is [here](https://github.com/jnskkmhr/ORB-SLAM3-STEREO-FIXED.git). \
+It is modified for this repository.
+
 ---
 
 ## Prerequisites
@@ -15,6 +19,7 @@ Current repository supports:
 In the future, I will also test with Ubuntu22.04 (OpenCV 4.5.4).
 
 ## Installation
+**Please try native installation only if you know what you are doing!!** \
 First, clone the repository. 
 ```bash
 mkdir -p ~/ros2_ws/src && cd ~/ros2_ws/src
