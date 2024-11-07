@@ -37,8 +37,9 @@ find_package(ORB_SLAM3 REQUIRED)
 add_executable(mono
   src/monocular/mono.cpp
   src/monocular/monocular-slam-node.cpp
+  src/ros_utils.cpp
 )
-ament_target_dependencies(mono rclcpp sensor_msgs cv_bridge ORB_SLAM3 Pangolin)
+ament_target_dependencies(mono rclcpp sensor_msgs geometry_msgs nav_msgs tf2 tf2_ros cv_bridge ORB_SLAM3 Pangolin)
 target_include_directories(
   mono 
   PUBLIC 
