@@ -9,6 +9,9 @@ launch:
       name: "rectify"
       default: "false"
   - arg:
+      name: "visualization"
+      default: "false"
+  - arg:
       name: "equalize"
       default: "false"
   - arg:
@@ -18,7 +21,7 @@ launch:
       pkg: "orbslam3"
       exec: "stereo-inertial"
       name: "orbslam3"
-      args: $(var vocab) $(var config) $(var rectify) $(var equalize)
+      args: $(var vocab) $(var config) $(var visualization) $(var rectify) $(var equalize)
       param:
         - 
           from: "$(find-pkg-share orbslam3)/config/stereo-inertial-slam.yaml"

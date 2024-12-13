@@ -1,10 +1,6 @@
-#ifndef __RGBD_SLAM_NODE_HPP__
-#define __RGBD_SLAM_NODE_HPP__
+#ifndef __RGBD_INERTIAL_NODE_HPP__
+#define __RGBD_INERTIAL_NODE_HPP__
 
-#include <iostream>
-#include <algorithm>
-#include <fstream>
-#include <chrono>
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/image.hpp"
@@ -18,10 +14,6 @@
 #include "tf2_ros/buffer.h"
 #include "tf2_ros/transform_listener.h"
 
-#include "message_filters/subscriber.h"
-#include "message_filters/synchronizer.h"
-#include "message_filters/sync_policies/approximate_time.h"
-
 #include <cv_bridge/cv_bridge.h>
 
 #include "System.h"
@@ -31,48 +23,53 @@
 
 #include "utility.hpp"
 
+using ImuMsg = sensor_msgs::msg::Imu;
 using ImageMsg = sensor_msgs::msg::Image;
 using PcdMsg = sensor_msgs::msg::PointCloud2;
 using PoseMsg = geometry_msgs::msg::PoseStamped;
+using OdomMsg = nav_msgs::msg::Odometry;
 
-class RgbdSlamNode : public rclcpp::Node
+class RgbdInertialNode : public rclcpp::Node
 {
 public:
-    RgbdSlamNode(ORB_SLAM3::System* pSLAM);
+    RgbdInertialNode(ORB_SLAM3::System* pSLAM);
 
-    ~RgbdSlamNode();
+    ~RgbdInertialNode();
 
 private:
-    using ImageMsg = sensor_msgs::msg::Image;
-    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::msg::Image, sensor_msgs::msg::Image> approximate_sync_policy;
-
-    void GrabRGBD(const sensor_msgs::msg::Image::SharedPtr msgRGB, const sensor_msgs::msg::Image::SharedPtr msgD);
+    void GrabImu(const ImuMsg::SharedPtr msg);
+    void GrabImageColor(const ImageMsg::SharedPtr msgColor);
+    void GrabImageDepth(const ImageMsg::SharedPtr msgDepth);
+    cv::Mat GetImage(const ImageMsg::SharedPtr msg);
+    void SyncWithImu();
 
     ORB_SLAM3::System* m_SLAM;
+    std::thread *syncThread_;
 
     cv_bridge::CvImageConstPtr cv_ptrRGB;
     cv_bridge::CvImageConstPtr cv_ptrD;
 
-    std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::Image> > rgb_sub;
-    std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::Image> > depth_sub;
+    rclcpp::Subscription<ImuMsg>::SharedPtr subImu_;
+    rclcpp::Subscription<ImageMsg>::SharedPtr subImgColor_;
+    rclcpp::Subscription<ImageMsg>::SharedPtr subImgDepth_;
 
     rclcpp::Publisher<PoseMsg>::SharedPtr pubPose_;
+    rclcpp::Publisher<OdomMsg>::SharedPtr pubOdom_;
     rclcpp::Publisher<PcdMsg>::SharedPtr pubPcd_;
     rclcpp::Publisher<ImageMsg>::SharedPtr pubTrackImage_;
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
     std::shared_ptr<tf2_ros::Buffer> tf_buffer_; 
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_; 
-    
-    std::shared_ptr<message_filters::Synchronizer<approximate_sync_policy> > syncApproximate;
 
-    bool init = false;
-    Sophus::SE3f Two;
+    // IMU
+    queue<ImuMsg::SharedPtr> imuBuf_;
+    std::mutex bufMutex_;
 
-    std::string world_frame; 
-    std::string odom_frame;
-    std::string odom_ref_frame;
-    std::string camera_frame;
+    // Image
+    queue<ImageMsg::SharedPtr> imgColorBuf_, imgDepthBuf_;
+    std::mutex bufMutexColor_, bufMutexDepth_;
+
 };
 
 #endif

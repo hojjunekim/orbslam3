@@ -1,0 +1,7 @@
+orbslam3:
+  ros__parameters:
+    world_frame: "map"
+    odom_frame: "odom"
+    odom_ref_frame: "camera_color_frame_toro"
+    camera_frame: "camera_color_frame"
+    # camera_optical_frame: "camera_color_optical_frame"
