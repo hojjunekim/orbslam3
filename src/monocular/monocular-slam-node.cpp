@@ -9,7 +9,7 @@ MonocularSlamNode::MonocularSlamNode(ORB_SLAM3::System* pSLAM, const string &str
 :   Node("ORB_SLAM3_ROS2")
 {
     m_SLAM = pSLAM;
-    img_sub = this->create_subscription<ImageMsg>("camera/image_raw", 10, std::bind(&MonocularSlamNode::GrabImage, this, std::placeholders::_1));
+    img_sub = this->create_subscription<ImageMsg>("camera/color/image_raw", 10, std::bind(&MonocularSlamNode::GrabImage, this, std::placeholders::_1));
 
     pubPose_ = this->create_publisher<PoseMsg>("camera_pose", 1);
     pubTrackImage_ = this->create_publisher<ImageMsg>("tracking_image", 1);
@@ -80,7 +80,7 @@ void MonocularSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
         geometry_msgs::msg::TransformStamped camera_to_odom = tf_buffer_->lookupTransform(camera_frame, odom_frame, tf2::TimePointZero);
         Sophus::SE3f Tco= transform_to_SE3(camera_to_odom);
         Sophus::SE3f Two = Twc * Tco.inverse();
-        publish_world_to_odom_tf(tf_broadcaster_, this->get_clock()->now(), Two, world_frame, odom_frame);
+        publish_world_to_odom_tf(tf_broadcaster_, msg->header.stamp , Two, world_frame, odom_frame);
     } catch (const tf2::TransformException & ex) {
         RCLCPP_INFO(
         this->get_logger(), "Could not get transform %s to %s: %s",
@@ -90,6 +90,6 @@ void MonocularSlamNode::GrabImage(const ImageMsg::SharedPtr msg)
 
     // Option2: publish map to camera tf from SLAM
     // publish_camera_tf(tf_broadcaster_, this->get_clock()->now(), Twc, world_frame, camera_frame);
-    publish_camera_pose(pubPose_, this->get_clock()->now(), Twc, world_frame);
-    publish_tracking_img(pubTrackImage_, this->get_clock()->now(), m_SLAM->GetCurrentFrame(), world_frame);
+    publish_camera_pose(pubPose_, msg->header.stamp, Twc, world_frame);
+    publish_tracking_img(pubTrackImage_, msg->header.stamp, m_SLAM->GetCurrentFrame(), world_frame);
 }

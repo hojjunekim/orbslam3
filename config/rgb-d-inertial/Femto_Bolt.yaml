@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------------------------------
 Camera.type: "PinHole"
 
-# Left Camera calibration and distortion parameters (OpenCV)
+# Camera calibration and distortion parameters (OpenCV) 
 Camera.fx: 746.390869140625
 Camera.fy: 745.8184204101562
 Camera.cx: 636.0549926757812
@@ -23,15 +23,43 @@ Camera.height: 720
 # Camera frames per second 
 Camera.fps: 15.0
 
+# IR projector baseline times fx (aprox.)
+Camera.bf: 40.0
+
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 1
 
-# Image scale, it changes the image size to be processed (<1.0: reduce, >1.0: increase)
-Camera.imageScale: 1.0 # 0.5 #0.7071 # 1/sqrt(2)
+# Close/Far threshold. Baseline times.
+ThDepth: 40.0
+
+# Deptmap values factor 
+DepthMapFactor: 5000.0 # 1.0 for ROS_bag
+
+# Transformation from body-frame (imu) to left camera
+Tbc: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: f
+   data: [-0.05036131, -0.93237045,  0.35797916,  0.70877415,
+          -0.02127248, -0.35735127, -0.93372777, -2.60679878,
+           0.99850449, -0.05463886, -0.00183716,  1.15313799,
+           0.        ,  0.        ,  0.        ,  1.        ]
+
+
+# Do not insert KFs when recently lost
+InsertKFsWhenLost: 0
+
+# IMU noise (Use those from VINS-mono)
+IMU.NoiseGyro: 1e-2 # 3 # 2.44e-4 #1e-3 # rad/s^0.5
+IMU.NoiseAcc: 1e-1 #2 # 1.47e-3 #1e-2 # m/s^1.5
+IMU.GyroWalk: 1e-6 # rad/s^1.5
+IMU.AccWalk: 1e-4 # m/s^2.5
+IMU.Frequency: 200
 
 #--------------------------------------------------------------------------------------------
 # ORB Parameters
 #--------------------------------------------------------------------------------------------
+
 # ORB Extractor: Number of features per image
 ORBextractor.nFeatures: 1250
 

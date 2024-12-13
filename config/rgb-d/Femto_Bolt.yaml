@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------------------------------
 Camera.type: "PinHole"
 
-# Left Camera calibration and distortion parameters (OpenCV)
+# Camera calibration and distortion parameters (OpenCV) 
 Camera.fx: 746.390869140625
 Camera.fy: 745.8184204101562
 Camera.cx: 636.0549926757812
@@ -23,15 +23,22 @@ Camera.height: 720
 # Camera frames per second 
 Camera.fps: 15.0
 
+# IR projector baseline times fx (aprox.)
+Camera.bf: 40.0
+
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 1
 
-# Image scale, it changes the image size to be processed (<1.0: reduce, >1.0: increase)
-Camera.imageScale: 1.0 # 0.5 #0.7071 # 1/sqrt(2)
+# Close/Far threshold. Baseline times.
+ThDepth: 40.0
+
+# Deptmap values factor 
+DepthMapFactor: 1000.0 # 1.0 for ROS_bag
 
 #--------------------------------------------------------------------------------------------
 # ORB Parameters
 #--------------------------------------------------------------------------------------------
+
 # ORB Extractor: Number of features per image
 ORBextractor.nFeatures: 1250
 
