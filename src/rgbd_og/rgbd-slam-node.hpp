@@ -68,7 +68,6 @@ private:
 
     bool init = false;
     Sophus::SE3f Two;
-    bool use_toro;
 
     std::string world_frame; 
     std::string odom_frame;

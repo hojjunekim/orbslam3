@@ -31,6 +31,7 @@ def generate_launch_description():
         executable='rgbd',
         name='orbslam3',
         output='screen',
+        prefix=['gdbserver localhost:3000'],
         parameters=[os.path.join(orbslam3_share_dir, 'config', 'rgbd-slam-toro.yaml')],
         arguments=[
             LaunchConfiguration('vocab'),
@@ -38,10 +39,18 @@ def generate_launch_description():
             LaunchConfiguration('visualization')
         ]
     )
+
+    pose_tf_node = Node(
+        package='toro_perception',
+        executable='pose_tf.py',
+        name='pose_tf',
+        output='screen'
+    )
     
     return LaunchDescription([
         vocab_arg,
         config_arg,
         visualization_arg,
-        orbslam3_node
+        orbslam3_node,
+        pose_tf_node
     ])

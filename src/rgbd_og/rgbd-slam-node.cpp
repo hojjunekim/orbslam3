@@ -29,13 +29,11 @@ RgbdSlamNode::RgbdSlamNode(ORB_SLAM3::System* pSLAM)
     this->declare_parameter("odom_ref_frame", "camera_color_frame");
     this->declare_parameter("odom_frame", "odom");
     this->declare_parameter("camera_frame", "camera_color_frame");
-    this->declare_parameter("use_toro", false);
 
     world_frame = this->get_parameter("world_frame").as_string();
     odom_ref_frame = this->get_parameter("odom_ref_frame").as_string();
     odom_frame = this->get_parameter("odom_frame").as_string();
     camera_frame = this->get_parameter("camera_frame").as_string();
-    use_toro = this->get_parameter("use_toro").as_bool();
 }
 
 RgbdSlamNode::~RgbdSlamNode()
@@ -49,13 +47,7 @@ RgbdSlamNode::~RgbdSlamNode()
 
 void RgbdSlamNode::GrabRGBD(const ImageMsg::SharedPtr msgRGB, const ImageMsg::SharedPtr msgD)
 {
-    if(!use_toro && !init)
-    {
-        RCLCPP_INFO(this->get_logger(), "No TORO optimization, initialize with identity transform");
-        Two = Sophus::SE3f();
-        init = true;
-    }
-    else if (!init)
+    if (!init)
     {
         try
         {
@@ -70,6 +62,7 @@ void RgbdSlamNode::GrabRGBD(const ImageMsg::SharedPtr msgRGB, const ImageMsg::Sh
             world_frame.c_str(), camera_frame.c_str(), ex.what());
             return;
         }
+
     }
 
     // Copy the ros rgb image message to cv::Mat.
@@ -98,63 +91,7 @@ void RgbdSlamNode::GrabRGBD(const ImageMsg::SharedPtr msgRGB, const ImageMsg::Sh
     Tco = m_SLAM->TrackRGBD(cv_ptrRGB->image, cv_ptrD->image, Utility::StampToSec(msgD->header.stamp));
     Sophus::SE3f Toc = Tco.inverse(); // camera optical frame pose in opencv coordinate
     
-    bool map_changed = m_SLAM->MapChanged();
-    int tracking_state = m_SLAM->GetTrackingState();
-    std::vector<cv::KeyPoint> keypoints = m_SLAM->GetTrackedKeyPointsUn();
-    bool isLost = m_SLAM->isLost();
-    bool isFinished = m_SLAM->isFinished();
-
-    if(tracking_state != 2)
-    {
-        RCLCPP_INFO(this->get_logger(), "Tracking state: %d", tracking_state); // 0: start new map(after 3), 2: good, 3: lost, 4: ?
-    }
-    if(map_changed)
-    {
-        RCLCPP_INFO(this->get_logger(), "Map changed!");
-    }
-    if(isLost)
-    {
-        RCLCPP_INFO(this->get_logger(), "Tracking lost!");
-    }
-    if(isFinished)
-    {
-        RCLCPP_INFO(this->get_logger(), "Tracking finished!");
-    }
-
-    // Th1::Track() ->
-    //   TrackWithMotionModel()
-    //     UpdateLastFrame()
-    //       Tl = Tlr * TlKFr
-    //     Tc = Tvel * Tl
-    //  TrackLocalMap()
-    //    Optimizer::PoseOptimization(&mCurrentFrame) from single frame info
-    //      Tc.optimize()
-    //   Tvel = Tc * Tl.inverse
-    //   Tl = Tc
-    // if mState==OK Tcr = Tc * TcKFr.inverse
-    // Th2::LocalMapping::run()
-    //   if new frame -> Optimizer::LocalBundleAdjustment
-    //     for all TKFs.optimize()
-    // Th3::LoopClosing::run()
-    //   if loopDetected -> CorrectLoop() -> update all TKF Tc
-    //   if mergeDetected -> MergeLocal() -> update all TKF Tc
-    // Th4::System::
-    //   get Tc after poseopt and localBA, spontaneous loopclose
-    // [rgbd-1] [INFO] [1734546731.431254794] [orbslam3]: Tracking state: 3
-    // [rgbd-1] Fail to track local map!
-    // [rgbd-1] Creation of new map with id: 1
-    // [rgbd-1] Stored map with ID: 0
-    // [rgbd-1] Creation of new map with last KF id: 59
-    // [rgbd-1] [INFO] [1734546731.553931130] [orbslam3]: Tracking state: 0
-    // [rgbd-1] First KF:59; Map init KF:59
-    // [rgbd-1] New Map created with 1027 points
-    // [rgbd-1] *Merge detected
-    // [rgbd-1] Local Mapping STOP
-    // [rgbd-1] Change to map with id: 0
-    // [rgbd-1] Local Mapping RELEASE
-    // [rgbd-1] Local Mapping RELEASE
-    // [rgbd-1] Merge finished!
-
+        // define coordinate transforms ///
     // OpenCV to ROS FLU coordinate transforms
     Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
     Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
