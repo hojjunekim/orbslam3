@@ -94,10 +94,27 @@ void RgbdSlamNode::GrabRGBD(const ImageMsg::SharedPtr msgRGB, const ImageMsg::Sh
         return;
     }
 
-    Sophus::SE3f Tco;
-    Tco = m_SLAM->TrackRGBD(cv_ptrRGB->image, cv_ptrD->image, Utility::StampToSec(msgD->header.stamp));
+    Sophus::SE3f Tco = m_SLAM->TrackRGBD(cv_ptrRGB->image, cv_ptrD->image, Utility::StampToSec(msgD->header.stamp));
     Sophus::SE3f Toc = Tco.inverse(); // camera optical frame pose in opencv coordinate
     
+    int numBA = m_SLAM->LocalMappingNumBA();
+    int numMerge = m_SLAM->LoopClosingNumMergeLocal();
+
+    if(numBA > numBA_prev)
+    {
+        RCLCPP_INFO(this->get_logger(), "Local BA Detected: %d", numBA);
+        Sophus::SE3f TKFdeltaBA = m_SLAM->LocalMappingDeltaTKFBA();
+        Two = Two * TKFdeltaBA;
+        numBA_prev = numBA;
+    }
+    if(numMerge > numMerge_prev)
+    {
+        RCLCPP_INFO(this->get_logger(), "Loop Merge Detected: %d", numMerge);
+        Sophus::SE3f TKFdeltaMerge = m_SLAM->LoopClosingDeltaTKFMerge();
+        Two = Two * TKFdeltaMerge;
+        numMerge_prev = numMerge;
+    }
+
     bool map_changed = m_SLAM->MapChanged();
     int tracking_state = m_SLAM->GetTrackingState();
     std::vector<cv::KeyPoint> keypoints = m_SLAM->GetTrackedKeyPointsUn();

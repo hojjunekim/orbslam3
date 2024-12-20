@@ -69,6 +69,8 @@ private:
     bool init = false;
     Sophus::SE3f Two;
     bool use_toro;
+    int numBA_prev = 0;
+    int numMerge_prev = 0;
 
     std::string world_frame; 
     std::string odom_frame;
