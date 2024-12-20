@@ -67,7 +67,7 @@ private:
     std::shared_ptr<message_filters::Synchronizer<approximate_sync_policy> > syncApproximate;
 
     bool init = false;
-    Sophus::SE3f Two;
+    Sophus::SE3f Two = Sophus::SE3f();
     bool use_toro;
     int numBA_prev = 0;
     int numMerge_prev = 0;
