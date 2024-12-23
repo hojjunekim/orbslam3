@@ -39,10 +39,10 @@ def generate_launch_description():
             LaunchConfiguration('visualization')
         ]
     )
-    
+
     return LaunchDescription([
         vocab_arg,
         config_arg,
         visualization_arg,
-        orbslam3_node
+        orbslam3_node,
     ])
