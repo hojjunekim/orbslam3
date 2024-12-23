@@ -47,6 +47,7 @@ private:
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::msg::Image, sensor_msgs::msg::Image> approximate_sync_policy;
 
     void GrabRGBD(const sensor_msgs::msg::Image::SharedPtr msgRGB, const sensor_msgs::msg::Image::SharedPtr msgD);
+    void ReadParam();
 
     ORB_SLAM3::System* m_SLAM;
 
@@ -68,15 +69,19 @@ private:
 
     bool init = false;
     Sophus::SE3f Two = Sophus::SE3f();
-    bool use_toro;
+
     int numBA_prev = 0;
     int numMerge_prev = 0;
     int numLoop_prev = 0;
+    int numReset_prev = 0;
 
-    std::string world_frame; 
-    std::string odom_frame;
-    std::string odom_ref_frame;
-    std::string camera_frame;
+    std::string m_world_frame; 
+    std::string m_odom_frame;
+    std::string m_odom_ref_frame;
+    std::string m_camera_frame;
+    std::string m_color_topic;
+    std::string m_depth_topic;
+    bool m_local_mapping;
 };
 
 #endif
