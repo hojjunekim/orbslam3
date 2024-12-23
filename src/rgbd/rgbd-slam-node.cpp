@@ -84,20 +84,28 @@ void RgbdSlamNode::GrabRGBD(const ImageMsg::SharedPtr msgRGB, const ImageMsg::Sh
 
     int numBA = m_SLAM->LocalMappingNumBA();
     int numMerge = m_SLAM->LoopClosingNumMergeLocal();
+    int numLoop = m_SLAM->LoopClosingNumLoop();
 
     if(numBA > numBA_prev)
     {
         RCLCPP_INFO(this->get_logger(), "Local BA Detected: %d", numBA);
         Sophus::SE3f TKFdeltaBA = m_SLAM->LocalMappingDeltaTKFBA();
-        Two = TKFdeltaBA * Two;
+        Two = Two * TKFdeltaBA;
         numBA_prev = numBA;
     }
     if(numMerge > numMerge_prev)
     {
-        RCLCPP_INFO(this->get_logger(), "Loop Merge Detected: %d", numMerge);
-        Sophus::SE3f TKFdeltaMerge = m_SLAM->LoopClosingDeltaTKFBA();
-        Two = TKFdeltaMerge * Two;
+        RCLCPP_INFO(this->get_logger(), "Merge Detected: %d", numMerge);
+        Sophus::SE3f TKFdeltaMerge = m_SLAM->LoopClosingDeltaTKFMerge();
+        Two = Two * TKFdeltaMerge;
         numMerge_prev = numMerge;
+    }
+    if(numLoop > numLoop_prev)
+    {
+        RCLCPP_INFO(this->get_logger(), "Loop Detected: %d", numLoop);
+        Sophus::SE3f TKFdeltaLoop = m_SLAM->LoopClosingDeltaTKFLoop();
+        Two = Two * TKFdeltaLoop;
+        numLoop_prev = numLoop;
     }
 
     publish_world_to_odom_tf(tf_broadcaster_, stamp, Two, world_frame, odom_frame);
