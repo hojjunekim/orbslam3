@@ -15,7 +15,8 @@ RgbdSlamNode::RgbdSlamNode(ORB_SLAM3::System* pSLAM)
     depth_sub = std::make_shared<message_filters::Subscriber<ImageMsg> >(shared_ptr<rclcpp::Node>(this), m_depth_topic);
 
     pubTrackImage_ = this->create_publisher<ImageMsg>("tracking_image", 1);
-
+    pubPose_ = this->create_publisher<PoseMsg>("camera_pose", 1);
+    
     tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
     // tf_static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);
     // tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
@@ -102,13 +103,13 @@ void RgbdSlamNode::GrabRGBD(const ImageMsg::SharedPtr msgRGB, const ImageMsg::Sh
         int numLoop = m_SLAM->LoopClosingNumLoop();
         int numReset = m_SLAM->TrackingNumReset();
 
-        // if(numBA > numBA_prev)
-        // {
-        //     RCLCPP_INFO(this->get_logger(), "Local BA Detected: %d", numBA);
-        //     Sophus::SE3f TKFdeltaBA = m_SLAM->LocalMappingDeltaTKFBA();
-        //     Two = Two * TKFdeltaBA;
-        //     numBA_prev = numBA;
-        // }
+        if(numBA > numBA_prev)
+        {
+            RCLCPP_INFO(this->get_logger(), "Local BA Detected: %d", numBA);
+            Sophus::SE3f TKFdeltaBA = m_SLAM->LocalMappingDeltaTKFBA();
+            Two = Two * TKFdeltaBA;
+            numBA_prev = numBA;
+        }
         if(numMerge > numMerge_prev)
         {
             RCLCPP_INFO(this->get_logger(), "Merge Detected: %d", numMerge);
@@ -129,7 +130,6 @@ void RgbdSlamNode::GrabRGBD(const ImageMsg::SharedPtr msgRGB, const ImageMsg::Sh
             Sophus::SE3f TKFdeltaReset = m_SLAM->TrackingDeltaTKFReset();
             Eigen::Vector3f tKFw = TKFdeltaReset.translation();
             Eigen::Quaternionf qKFw = TKFdeltaReset.unit_quaternion();
-            std::cout << "tKFw: " << tKFw.transpose() << " qKFw: " << qKFw.coeffs().transpose() << std::endl;
             Two = Two * TKFdeltaReset;
             numReset_prev = numReset;
         }
@@ -144,6 +144,7 @@ void RgbdSlamNode::GrabRGBD(const ImageMsg::SharedPtr msgRGB, const ImageMsg::Sh
     Sophus::SE3f Two_refined = cv2ros * Two * cv2ros.inverse();
     publish_world_to_odom_tf(tf_broadcaster_, stamp, Two_refined, m_world_frame, m_odom_frame);
     publish_camera_tf(tf_broadcaster_, stamp, Twc, m_world_frame, m_camera_frame);
+    publish_camera_pose(pubPose_, stamp, Twc, m_world_frame);
     publish_tracking_img(pubTrackImage_, stamp, m_SLAM->GetCurrentFrame(), m_world_frame);
 
     bool map_changed = m_SLAM->MapChanged();
