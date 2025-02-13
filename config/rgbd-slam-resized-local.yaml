@@ -1,7 +1,7 @@
 orbslam3:
   ros__parameters:
-    color_topic: "/camera/color/image_raw"
-    depth_topic: "/camera/depth/image_raw"
+    color_topic: "/camera/color/resize/image_raw"
+    depth_topic: "/camera/depth/resize/image_raw"
 
     world_frame: "map"
     odom_frame: "odom"

@@ -58,6 +58,18 @@ target_include_directories(
   ${PROJECT_SOURCE_DIR}/include ${ORB_SLAM3_INCLUDE_DIRS}/include ${ORB_SLAM3_INCLUDE_DIRS}/include/CameraModels
 )
 
+add_executable(rgbd-rel
+  src/rgbd-rel/rgbd.cpp
+  src/rgbd-rel/rgbd-rel-node.cpp
+  src/ros_utils.cpp
+)
+ament_target_dependencies(rgbd-rel rclcpp sensor_msgs geometry_msgs nav_msgs tf2 tf2_ros cv_bridge ORB_SLAM3 Pangolin)
+target_include_directories(
+  rgbd-rel
+  PUBLIC 
+  ${PROJECT_SOURCE_DIR}/include ${ORB_SLAM3_INCLUDE_DIRS}/include ${ORB_SLAM3_INCLUDE_DIRS}/include/CameraModels
+)
+
 add_executable(rgbd-inertial
   src/rgbd-inertial/rgbd-inertial.cpp
   src/rgbd-inertial/rgbd-inertial-node.cpp
@@ -94,7 +106,7 @@ target_include_directories(
   ${PROJECT_SOURCE_DIR}/include ${ORB_SLAM3_INCLUDE_DIRS}/include ${ORB_SLAM3_INCLUDE_DIRS}/include/CameraModels
 )
 
-install(TARGETS mono rgbd rgbd-inertial stereo stereo-inertial
+install(TARGETS mono rgbd rgbd-rel rgbd-inertial stereo stereo-inertial
   DESTINATION lib/${PROJECT_NAME})
 
 # Install config files

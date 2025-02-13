@@ -34,6 +34,7 @@
 using ImageMsg = sensor_msgs::msg::Image;
 using PcdMsg = sensor_msgs::msg::PointCloud2;
 using PoseMsg = geometry_msgs::msg::PoseStamped;
+using OdomMsg = nav_msgs::msg::Odometry;
 
 class RgbdSlamNode : public rclcpp::Node
 {
@@ -57,7 +58,7 @@ private:
     std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::Image> > rgb_sub;
     std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::Image> > depth_sub;
 
-    rclcpp::Publisher<PoseMsg>::SharedPtr pubPose_;
+    rclcpp::Publisher<OdomMsg>::SharedPtr pubOdom_;
     rclcpp::Publisher<PcdMsg>::SharedPtr pubPcd_;
     rclcpp::Publisher<ImageMsg>::SharedPtr pubTrackImage_;
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
@@ -81,7 +82,10 @@ private:
     std::string m_camera_frame;
     std::string m_color_topic;
     std::string m_depth_topic;
+    std::string m_pose_use;
     bool m_local_mapping;
+    int m_queue_size;
+    bool m_debug;
 };
 
 #endif

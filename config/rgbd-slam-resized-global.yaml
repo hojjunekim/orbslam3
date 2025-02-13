@@ -5,5 +5,9 @@ orbslam3:
 
     world_frame: "map"
     odom_frame: "odom"
-    camera_frame: "vo"
-    local_mapping: true
+    camera_frame: "camera_color_frame"
+    local_mapping: false
+
+    queue_size: 5
+    pose_use: "VO"
+    debug: false

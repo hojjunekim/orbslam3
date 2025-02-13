@@ -34,6 +34,7 @@
 using ImageMsg = sensor_msgs::msg::Image;
 using PcdMsg = sensor_msgs::msg::PointCloud2;
 using PoseMsg = geometry_msgs::msg::PoseStamped;
+using OdomMsg = nav_msgs::msg::Odometry;
 
 class RgbdSlamNode : public rclcpp::Node
 {
@@ -47,6 +48,7 @@ private:
     typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::msg::Image, sensor_msgs::msg::Image> approximate_sync_policy;
 
     void GrabRGBD(const sensor_msgs::msg::Image::SharedPtr msgRGB, const sensor_msgs::msg::Image::SharedPtr msgD);
+    void ReadParam();
 
     ORB_SLAM3::System* m_SLAM;
 
@@ -56,7 +58,8 @@ private:
     std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::Image> > rgb_sub;
     std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::Image> > depth_sub;
 
-    rclcpp::Publisher<PoseMsg>::SharedPtr pubPose_;
+    rclcpp::Publisher<OdomMsg>::SharedPtr pubOdom_;
+    rclcpp::Publisher<OdomMsg>::SharedPtr pubOdomRel_;
     rclcpp::Publisher<PcdMsg>::SharedPtr pubPcd_;
     rclcpp::Publisher<ImageMsg>::SharedPtr pubTrackImage_;
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
@@ -67,12 +70,24 @@ private:
     std::shared_ptr<message_filters::Synchronizer<approximate_sync_policy> > syncApproximate;
 
     bool init = false;
-    Sophus::SE3f Two;
+    Sophus::SE3f Two = Sophus::SE3f();
 
-    std::string world_frame; 
-    std::string odom_frame;
-    std::string odom_ref_frame;
-    std::string camera_frame;
+    int numBA_prev = 0;
+    int numMerge_prev = 0;
+    int numLoop_prev = 0;
+    int numReset_prev = 0;
+
+    std::string m_world_frame; 
+    std::string m_odom_frame;
+    std::string m_odom_ref_frame;
+    std::string m_camera_frame;
+    std::string m_color_topic;
+    std::string m_depth_topic;
+    std::string m_pose_use;
+    bool m_local_mapping;
+    int m_queue_size;
+    bool m_debug;
+    int m_relative = false;
 };
 
 #endif

@@ -22,7 +22,7 @@ def generate_launch_description():
     
     visualization_arg = DeclareLaunchArgument(
         'visualization',
-        default_value='true',
+        default_value='false',
         description='Enable visualization'
     )
     
