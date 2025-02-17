@@ -37,8 +37,9 @@ find_package(ORB_SLAM3 REQUIRED)
 add_executable(mono
   src/monocular/mono.cpp
   src/monocular/monocular-slam-node.cpp
+  src/ros_utils.cpp
 )
-ament_target_dependencies(mono rclcpp sensor_msgs cv_bridge ORB_SLAM3 Pangolin)
+ament_target_dependencies(mono rclcpp sensor_msgs geometry_msgs nav_msgs tf2 tf2_ros cv_bridge ORB_SLAM3 Pangolin)
 target_include_directories(
   mono 
   PUBLIC 
@@ -48,10 +49,35 @@ target_include_directories(
 add_executable(rgbd
   src/rgbd/rgbd.cpp
   src/rgbd/rgbd-slam-node.cpp
+  src/ros_utils.cpp
 )
-ament_target_dependencies(rgbd rclcpp sensor_msgs cv_bridge message_filters ORB_SLAM3 Pangolin)
+ament_target_dependencies(rgbd rclcpp sensor_msgs geometry_msgs nav_msgs tf2 tf2_ros cv_bridge ORB_SLAM3 Pangolin)
 target_include_directories(
   rgbd
+  PUBLIC 
+  ${PROJECT_SOURCE_DIR}/include ${ORB_SLAM3_INCLUDE_DIRS}/include ${ORB_SLAM3_INCLUDE_DIRS}/include/CameraModels
+)
+
+add_executable(rgbd-rel
+  src/rgbd-rel/rgbd.cpp
+  src/rgbd-rel/rgbd-rel-node.cpp
+  src/ros_utils.cpp
+)
+ament_target_dependencies(rgbd-rel rclcpp sensor_msgs geometry_msgs nav_msgs tf2 tf2_ros cv_bridge ORB_SLAM3 Pangolin)
+target_include_directories(
+  rgbd-rel
+  PUBLIC 
+  ${PROJECT_SOURCE_DIR}/include ${ORB_SLAM3_INCLUDE_DIRS}/include ${ORB_SLAM3_INCLUDE_DIRS}/include/CameraModels
+)
+
+add_executable(rgbd-inertial
+  src/rgbd-inertial/rgbd-inertial.cpp
+  src/rgbd-inertial/rgbd-inertial-node.cpp
+  src/ros_utils.cpp
+)
+ament_target_dependencies(rgbd-inertial rclcpp sensor_msgs geometry_msgs nav_msgs tf2 tf2_ros cv_bridge ORB_SLAM3 Pangolin)
+target_include_directories(
+  rgbd-inertial
   PUBLIC 
   ${PROJECT_SOURCE_DIR}/include ${ORB_SLAM3_INCLUDE_DIRS}/include ${ORB_SLAM3_INCLUDE_DIRS}/include/CameraModels
 )
@@ -80,7 +106,7 @@ target_include_directories(
   ${PROJECT_SOURCE_DIR}/include ${ORB_SLAM3_INCLUDE_DIRS}/include ${ORB_SLAM3_INCLUDE_DIRS}/include/CameraModels
 )
 
-install(TARGETS mono rgbd stereo stereo-inertial
+install(TARGETS mono rgbd rgbd-rel rgbd-inertial stereo stereo-inertial
   DESTINATION lib/${PROJECT_NAME})
 
 # Install config files

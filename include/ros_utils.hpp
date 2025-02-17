@@ -26,12 +26,10 @@ void publish_camera_pose(
   Sophus::SE3f& Twc,  
   std::string world_frame_id);
 
-void publish_body_odometry(
+void publish_camera_odometry(
   const rclcpp::Publisher<OdomMsg>::SharedPtr& publisher,
   const rclcpp::Time& stamp, 
   Sophus::SE3f Twb, 
-  Eigen::Vector3f Vwb, 
-  Eigen::Vector3f Wwb,
   std::string world_frame_id,
   std::string odom_frame_id);
 

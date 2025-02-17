@@ -9,13 +9,16 @@ launch:
       name: "rectify"
       default: "false"
   - arg:
+      name: "visualization"
+      default: "false"
+  - arg:
       name: "camera_name"
       default: "d435i"
   - node:
       pkg: "orbslam3"
       exec: "stereo"
       name: "orbslam3"
-      args: $(var vocab) $(var config) $(var rectify)
+      args: $(var vocab) $(var config) $(var visualization) $(var rectify)
       param:
         - 
           from: "$(find-pkg-share orbslam3)/config/stereo-slam.yaml"

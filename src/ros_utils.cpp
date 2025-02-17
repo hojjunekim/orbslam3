@@ -28,12 +28,10 @@ void publish_camera_pose(
   publisher->publish(pose_msg);
 }
 
-void publish_body_odometry(
+void publish_camera_odometry(
   const rclcpp::Publisher<OdomMsg>::SharedPtr& publisher,
   const rclcpp::Time& stamp, 
   Sophus::SE3f Twb, 
-  Eigen::Vector3f Vwb, 
-  Eigen::Vector3f Wwb,
   std::string world_frame_id,
   std::string odom_frame_id)
 {
@@ -45,16 +43,6 @@ void publish_body_odometry(
   odom_msg.child_frame_id = odom_frame_id;
   odom_msg.header.stamp = stamp;
 
-  // Coordinate Transform: OpenCV coordinate to ROS FLU coordinate
-  Eigen::Matrix<float, 3, 3> cv_to_ros_rot; 
-  Eigen::Matrix<float, 3, 1> cv_to_ros_trans; 
-  cv_to_ros_rot << 0, -1, 0,
-                  0, 0, -1,
-                  1, 0, 0;
-  cv_to_ros_trans << 0, 0, 0;
-  Sophus::SE3f cv_to_ros(cv_to_ros_rot, cv_to_ros_trans);
-
-  Twb = cv_to_ros * Twb; 
   odom_msg.pose.pose.position.x = Twb.translation().x();
   odom_msg.pose.pose.position.y = Twb.translation().y();
   odom_msg.pose.pose.position.z = Twb.translation().z();
@@ -64,17 +52,15 @@ void publish_body_odometry(
   odom_msg.pose.pose.orientation.y = Twb.unit_quaternion().coeffs().y();
   odom_msg.pose.pose.orientation.z = Twb.unit_quaternion().coeffs().z();
 
-  Vwb = cv_to_ros_rot * Vwb; 
-  Wwb = cv_to_ros_rot * Wwb; 
-
-  odom_msg.twist.twist.linear.x = Vwb.x();
-  odom_msg.twist.twist.linear.y = Vwb.y();
-  odom_msg.twist.twist.linear.z = Vwb.z();
-
-  odom_msg.twist.twist.angular.x = Wwb.x();
-  odom_msg.twist.twist.angular.y = Wwb.y();
-  odom_msg.twist.twist.angular.z = Wwb.z();
-
+  odom_msg.pose.covariance = {
+    0.1, 0, 0, 0, 0, 0,
+    0, 0.1, 0, 0, 0, 0,
+    0, 0, 0.1, 0, 0, 0,
+    0, 0, 0, 0.005, 0, 0,
+    0, 0, 0, 0, 0.005, 0,
+    0, 0, 0, 0, 0, 0.005
+  };
+  
   publisher->publish(odom_msg);
 }
 

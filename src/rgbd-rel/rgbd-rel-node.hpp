@@ -59,6 +59,7 @@ private:
     std::shared_ptr<message_filters::Subscriber<sensor_msgs::msg::Image> > depth_sub;
 
     rclcpp::Publisher<OdomMsg>::SharedPtr pubOdom_;
+    rclcpp::Publisher<OdomMsg>::SharedPtr pubOdomRel_;
     rclcpp::Publisher<PcdMsg>::SharedPtr pubPcd_;
     rclcpp::Publisher<ImageMsg>::SharedPtr pubTrackImage_;
     std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
@@ -86,6 +87,7 @@ private:
     bool m_local_mapping;
     int m_queue_size;
     bool m_debug;
+    int m_relative = false;
 };
 
 #endif
