@@ -31,7 +31,7 @@ def generate_launch_description():
         executable='rgbd',
         name='orbslam3',
         output='screen',
-        parameters=[os.path.join(orbslam3_share_dir, 'config', 'rgbd-slam-local.yaml')],
+        parameters=[os.path.join(orbslam3_share_dir, 'config', 'rgbd-slam-global.yaml')],
         arguments=[
             LaunchConfiguration('vocab'),
             LaunchConfiguration('config'),

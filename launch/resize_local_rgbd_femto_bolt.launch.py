@@ -34,7 +34,7 @@ def generate_launch_description():
         name='orbslam3',
         output='screen',
         # prefix=['gdbserver localhost:3000'],
-        parameters=[os.path.join(orbslam3_share_dir, 'config', 'rgbd-slam-resized.yaml')],
+        parameters=[os.path.join(orbslam3_share_dir, 'config', 'rgbd-slam-resized-local.yaml')],
         arguments=[
             LaunchConfiguration('vocab'),
             LaunchConfiguration('config'),

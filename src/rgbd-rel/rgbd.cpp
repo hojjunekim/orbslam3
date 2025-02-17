@@ -4,7 +4,7 @@
 #include <chrono>
 
 #include "rclcpp/rclcpp.hpp"
-#include "rgbd-slam-node.hpp"
+#include "rgbd-rel-node.hpp"
 
 #include "System.h"
 
