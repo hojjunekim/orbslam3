@@ -87,8 +87,8 @@ void RgbdSlamNode::GrabRGBD(const ImageMsg::SharedPtr msgRGB, const ImageMsg::Sh
     Eigen::Matrix<float, 3, 3> cv2ros_r; 
     Eigen::Matrix<float, 3, 1> cv2_ros_t; 
     cv2ros_r << 0, 0, 1,
-                    -1, 0, 0,
-                    0, -1, 0;
+                -1, 0, 0,
+                0, -1, 0;
     cv2_ros_t << 0, 0, 0;
     Sophus::SE3f cv2ros(cv2ros_r, cv2_ros_t);
 
@@ -163,24 +163,4 @@ void RgbdSlamNode::GrabRGBD(const ImageMsg::SharedPtr msgRGB, const ImageMsg::Sh
     // {
     //     RCLCPP_INFO(this->get_logger(), "Tracking lost!");
     // }
-
-    // Th1::Track() ->
-    //   TrackWithMotionModel()
-    //     UpdateLastFrame()
-    //       Tl = Tlr * TlKFr
-    //     Tc = Tvel * Tl
-    //  TrackLocalMap()
-    //    Optimizer::PoseOptimization(&mCurrentFrame) from single frame info
-    //      Tc.optimize()
-    //   Tvel = Tc * Tl.inverse
-    //   Tl = Tc
-    // if mState==OK Tcr = Tc * TcKFr.inverse
-    // Th2::LocalMapping::run()
-    //   if new frame -> Optimizer::LocalBundleAdjustment
-    //     for all TKFs.optimize()
-    // Th3::LoopClosing::run()
-    //   if loopDetected -> CorrectLoop() -> update all TKF Tc
-    //   if mergeDetected -> MergeLocal() -> update all TKF Tc
-    // Th4::System::
-    //   get Tc after poseopt and localBA, spontaneous loopclose
 }
